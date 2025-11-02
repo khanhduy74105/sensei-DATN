@@ -1,0 +1,204 @@
+"use server";
+
+import { db } from "@/lib/prisma";
+import { IAssessment } from "@/types";
+import { auth } from "@clerk/nextjs/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const model = genAI.getGenerativeModel({
+    model: 'gemini-2.0-flash',
+});
+
+interface LiveQuizQuestion {
+    question: string;
+    correctAnswer: string;
+    feedback: string;
+}
+
+export async function generateLiveQuiz() {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+        select: {
+            industry: true,
+            skills: true,
+        },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    const prompt = `
+    Generate 10 technical interview questions for a ${user.industry
+        } professional${user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
+        }.
+    
+    Each question should be multiple choice with 4 options.
+    
+    Return the response in this JSON format only, no additional text:
+    {
+      "questions": [
+        {
+          "question": "string",
+          "options": ["string", "string", "string", "string"],
+          "correctAnswer": "string",
+          "explanation": "string"
+        }
+      ]
+    }
+  `;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+        const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+        const quiz = JSON.parse(cleanedText);
+
+        return quiz.questions;
+    } catch (error) {
+        console.error("Error generating quiz:", error);
+        throw new Error("Failed to generate quiz questions");
+    }
+}
+
+export async function saveLiveQuizResult(questions: LiveQuizQuestion[], answers: string[], score: number) {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    const questionResults = questions.map((q, index) => ({
+        question: q.question,
+        answer: q.correctAnswer,
+        userAnswer: answers[index],
+        isCorrect: q.correctAnswer === answers[index],
+    }));
+
+    // Get wrong answers
+    const wrongAnswers = questionResults.filter((q) => !q.isCorrect);
+
+    // Only generate improvement tips if there are wrong answers
+    let improvementTip = null;
+    if (wrongAnswers.length > 0) {
+        const wrongQuestionsText = wrongAnswers
+            .map(
+                (q) =>
+                    `Question: "${q.question}"\nCorrect Answer: "${q.answer}"\nUser Answer: "${q.userAnswer}"`
+            )
+            .join("\n\n");
+
+        const improvementPrompt = `
+      The user got the following ${user.industry} technical interview questions wrong:
+
+      ${wrongQuestionsText}
+
+      Based on these mistakes, provide a concise, specific improvement tip.
+      Focus on the knowledge gaps revealed by these wrong answers.
+      Keep the response under 2 sentences and make it encouraging.
+      Don't explicitly mention the mistakes, instead focus on what to learn/practice.
+    `;
+
+        try {
+            const tipResult = await model.generateContent(improvementPrompt);
+
+            improvementTip = tipResult.response.text().trim();
+        } catch (error) {
+            console.error("Error generating improvement tip:", error);
+            // Continue without improvement tip if generation fails
+        }
+    }
+
+    try {
+        const assessment = await db.assessment.create({
+            data: {
+                userId: user.id,
+                quizScore: score,
+                questions: questionResults,
+                category: "Technical",
+                improvementTip,
+            },
+        });
+
+        return assessment;
+    } catch (error) {
+        console.error("Error saving quiz result:", error);
+        throw new Error("Failed to save quiz result");
+    }
+}
+
+export async function getAssessments() {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    try {
+        const assessments = await db.assessment.findMany({
+            where: {
+                userId: user.id,
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+        });
+        return assessments as IAssessment[];
+    } catch (error) {
+        console.error("Error fetching assessments:", error);
+        throw new Error("Failed to fetch assessments");
+    }
+}
+
+export async function generateLiveInterviewQuestions({ role, description, yoes }: { role: string; description: string; yoes: string }) {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) throw new Error("User not found");
+    const prompt = `
+    Act as a technical interviewer.
+    Generate 5 professional interview questions for the position: ${role}, 
+    with the job description: ${description}, 
+    and the candidate's years of experience: ${yoes}.
+    Requirements:
+    - Questions must be clear and concise.
+    - Focus on practical skills and real-world project experience.
+    - Do NOT provide answers, only list the questions.  
+    Return the response in this JSON format only, no additional text:
+    {
+        "questions": [
+            {
+         "question": "string",
+         "correctAnswer": "string",
+         
+        }
+        ]
+    }
+  `;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+        const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+        const quiz = JSON.parse(cleanedText);
+
+        return quiz.questions;
+    } catch (error) {
+        console.error("Error generating quiz:", error);
+        throw new Error("Failed to generate quiz questions");
+    }
+}
