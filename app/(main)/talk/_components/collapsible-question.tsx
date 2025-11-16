@@ -1,6 +1,5 @@
 "use client";
 
-import { IUserLiveQuestion } from "@/types";
 import React from "react";
 import {
   Collapsible,
@@ -15,9 +14,10 @@ import {
   Star,
   ChevronsDownUp,
 } from "lucide-react";
+import { ILiveQuizQuestion } from "@/types";
 
 interface CollapsibleQuestionProps {
-  question: IUserLiveQuestion;
+  question: ILiveQuizQuestion;
 }
 
 const CollapsibleQuestion = ({ question }: CollapsibleQuestionProps) => {
@@ -65,7 +65,9 @@ const CollapsibleQuestion = ({ question }: CollapsibleQuestionProps) => {
           <div className="flex-1">
             <div className="text-xs font-medium text-blue-800">Your answer</div>
             <div className="mt-1 text-sm text-blue-900">
-              {question.yourAnswer ?? "No answer provided."}
+              {!question.userAnswer
+                ? "No answer provided."
+                : question.userAnswer}
             </div>
           </div>
         </div>

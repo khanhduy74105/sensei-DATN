@@ -203,7 +203,11 @@ export async function generateInterviewQuestions({ role, description, yoes }: { 
   }
 }
 
-export async function saveGeneratedInterviewQuestions(questions: { question: string, correctAnswer: string }[]): Promise<string> {
+export async function saveGeneratedInterviewQuestions(interviewInfo: {
+  role: string;
+  description: string;
+  yoes: string;
+}, questions: { question: string, correctAnswer: string }[]): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   const user = await db.user.findUnique({
@@ -215,6 +219,9 @@ export async function saveGeneratedInterviewQuestions(questions: { question: str
     const mockInterview = await db.liveMockInterview.create({
       data: {
         userId: user.id,
+        description: interviewInfo.description,
+        role: interviewInfo.role,
+        yoes: parseInt(interviewInfo.yoes),
       },
     });
 
@@ -255,6 +262,11 @@ export async function getLiveMockInterviewById(id: string) {
       id: mockInterview.id,
       userId: mockInterview.userId,
       questions: mockInterview.LiveInterviewQuestion,
+      role: mockInterview.role,
+      description: mockInterview.description,
+      yoes: mockInterview.yoes.toString(),
+      createdAt: mockInterview.createdAt,
+      updatedAt: mockInterview.updatedAt,
     }
 
     return mockInterviewFormatted;
@@ -330,5 +342,42 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
   } catch (error) {
     console.error("Error generating interview feedback:", error);
     throw new Error("Failed to generate interview feedback");
+  }
+}
+
+export async function getLiveMockInterviews() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+  if (!user) throw new Error("User not found");
+  try {
+    const mockInterviews = await db.liveMockInterview.findMany({
+      where: {
+        userId: user.id,
+      },
+      include: {
+        LiveInterviewQuestion: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+    return mockInterviews.map(
+      (mockInterview) => ({
+        id: mockInterview.id,
+        userId: mockInterview.userId,
+        questions: mockInterview.LiveInterviewQuestion,
+        role: mockInterview.role,
+        description: mockInterview.description,
+        yoes: mockInterview.yoes.toString(),
+        createdAt: mockInterview.createdAt,
+        updatedAt: mockInterview.updatedAt,
+      }
+    )) as ILiveMockInterview[];
+  } catch (error) {
+    console.error("Error fetching mock interviews:", error);
+    throw new Error("Failed to fetch mock interviews");
   }
 }

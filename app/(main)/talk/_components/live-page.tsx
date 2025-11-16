@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
-import { CheckCircle, LightbulbIcon } from "lucide-react";
+import { AudioLines, Camera, CheckCircle, LightbulbIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   const [userAnswers, setUserAnswers] = useState<string[]>(
     Array(questions.length).fill("")
   );
+  const [isSoundDetected, setIsSoundDetected] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const router = useRouter();
@@ -36,6 +37,10 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
     if (selectedIndex === questions.length - 1) {
       setShowConfirmDialog(true);
     }
+  };
+
+  const onExit = () => {
+    router.push("/talk");
   };
 
   const onSubmitAnswers = async () => {
@@ -72,6 +77,9 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         .join("");
       userAnswers[selectedIndex] = transcript;
       setUserAnswers([...userAnswers]);
+      setIsSoundDetected(true);
+      // Reset sound detection after a short delay
+      setTimeout(() => setIsSoundDetected(false), 1000);
     };
 
     recognition.onend = () => setRecording(false);
@@ -82,13 +90,27 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   return (
     <div className="flex flex-col p-6 gap-6 bg-muted">
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Confirm</DialogTitle>
+            <DialogTitle>Submit Interview</DialogTitle>
             <DialogDescription>
-              Are you sure to submit your answer?
+              Please review your answers before submitting.
             </DialogDescription>
           </DialogHeader>
+          <div className="my-4 max-h-[60vh] overflow-y-auto space-y-4">
+            {questions.map((q, idx) => (
+              <div key={idx} className="space-y-2 p-4 border rounded-lg">
+                <div className="font-medium">Question {idx + 1}:</div>
+                <div className="text-sm text-muted-foreground">
+                  {q.question}
+                </div>
+                <div className="font-medium mt-2">Your Answer:</div>
+                <div className="text-sm text-muted-foreground">
+                  {userAnswers[idx] || "(No answer provided)"}
+                </div>
+              </div>
+            ))}
+          </div>
           <DialogFooter>
             <Button
               variant="secondary"
@@ -133,8 +155,11 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
 
           {/* Selected question content */}
           <div className="mb-5 p-4 rounded-md border border-border bg-muted/50">
-            <div className="text-sm text-muted-foreground font-medium mb-2">
-              {`Q${selectedIndex + 1}`}
+            <div className="flex gap-2 items-center text-sm text-muted-foreground font-medium mb-2">
+              <div className="">{`Q${selectedIndex + 1}`}</div>
+              <Button variant="ghost">
+                <AudioLines />
+              </Button>
             </div>
             <div className="text-base text-foreground">
               {questions.at(selectedIndex)?.question}
@@ -165,16 +190,19 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
 
         {/* Right column: camera + record control */}
         <main className="flex-1 md:1/2 bg-card border border-border rounded-md p-6 flex flex-col items-center shadow-sm">
-          <h2 className="text-lg font-semibold mb-4 text-muted-foreground">
-            Live Camera
-          </h2>
-
-          <div className="w-full h-80 bg-muted rounded-md flex items-center justify-center border border-dashed border-border">
-            {/* Replace this placeholder with actual video/camera element */}
+          <div
+            className={`w-full h-80 bg-muted rounded-md flex items-center justify-center border border-dashed border-border transition-shadow duration-300 relative ${
+              isSoundDetected ? "ring-4 ring-green-500/30" : ""
+            }`}
+          >
             <div className="text-center text-muted-foreground">
-              <div className="mb-2 font-medium">Camera Preview</div>
-              <div className="text-xs opacity-80">(camera feed goes here)</div>
+              <div className="text-xs opacity-80">
+                <Camera size={48} className="mx-auto mb-2" />
+              </div>
             </div>
+            {isSoundDetected && (
+              <div className="absolute inset-0 bg-green-500/5 animate-pulse rounded-md" />
+            )}
           </div>
 
           <div className="mt-4 flex items-center gap-3">
@@ -234,10 +262,16 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         >
           {selectedIndex === questions.length - 1 ? "End Interview" : "Next"}
         </Button>
+        <Button
+          onClick={onExit}
+          variant={"secondary"}
+          className="px-4 py-2 bg-muted/50 border border-border rounded-md hover:bg-muted/60"
+        >
+          Exit
+        </Button>
       </footer>
     </div>
   );
 };
 
 export default LiveInterviewPage;
-// ...existing code...

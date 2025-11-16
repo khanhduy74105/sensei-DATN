@@ -62,6 +62,11 @@ export interface ICoverLetter {
 export interface ILiveMockInterview {
   id: string;
   userId: string;
+  role: string;
+  description: string;
+  yoes: string;
+  createdAt: Date;
+  updatedAt: Date;
   questions: LiveQuizQuestion[];
 }
 

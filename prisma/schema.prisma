@@ -103,6 +103,9 @@ model LiveMockInterview {
   id                    String                  @id @default(cuid())
   userId                String
   user                  User                    @relation(fields: [userId], references: [id])
+  yoes                  Int                     @default(0) // Years of experience
+  role                  String // Role applying for
+  description           String // Job description
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   LiveInterviewQuestion LiveInterviewQuestion[]
