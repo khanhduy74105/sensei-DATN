@@ -35,8 +35,6 @@ interface EntryFromProps {
 }
 
 export function EntryForm({ type, entries, onChange }: EntryFromProps) {
-  const [isAdding, setIsAdding] = useState(false);
-
   const {
     register,
     handleSubmit: handleValidation,
@@ -52,23 +50,23 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
       startDate: "",
       endDate: "",
       description: "",
-      current: false,
+      is_current: false,
     },
   });
 
-  const current = watch("current");
+  const current = watch("is_current");
 
   const handleAdd = handleValidation((data) => {
     const formattedEntry = {
+      id: crypto.randomUUID(),
       ...data,
       startDate: formatDisplayDate(data.startDate),
-      endDate: data.current ? "" : formatDisplayDate(data.endDate),
+      endDate: data.is_current ? "" : formatDisplayDate(data.endDate),
     };
 
     onChange([...entries, formattedEntry]);
 
     reset();
-    setIsAdding(false);
   });
 
   const handleDelete = (index: number) => {
@@ -104,10 +102,10 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
 
     await improveWithAIFn({
       current: description,
-      type: type.toLowerCase(), // 'experience', 'education', or 'project'
+      type: type.toLowerCase(),
     });
   };
-
+  
   return (
     <div className="space-y-4">
       <div className="space-y-4">
@@ -128,7 +126,7 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                {item.current
+                {item.is_current
                   ? `${item.startDate} - Present`
                   : `${item.startDate} - ${item.endDate}`}
               </p>
@@ -140,7 +138,7 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
         ))}
       </div>
 
-      {isAdding && (
+      {
         <Card>
           <CardHeader>
             <CardTitle>Add {type}</CardTitle>
@@ -192,10 +190,10 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
-                id="current"
-                {...register("current")}
+                id="is_current"
+                {...register("is_current")}
                 onChange={(e) => {
-                  setValue("current", e.target.checked);
+                  setValue("is_current", e.target.checked);
                   if (e.target.checked) {
                     setValue("endDate", "");
                   }
@@ -207,7 +205,7 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
             <div className="space-y-2">
               <Textarea
                 placeholder={`Description of your ${type.toLowerCase()}`}
-                className="h-32"
+                className="min-h-32"
                 {...register("description")}
               />
               {errors.description && (
@@ -220,6 +218,7 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
               type="button"
               variant="ghost"
               size="sm"
+              color="purple"
               onClick={handleImproveDescription}
               disabled={isImproving || !watch("description")}
             >
@@ -242,7 +241,6 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
               variant="outline"
               onClick={() => {
                 reset();
-                setIsAdding(false);
               }}
             >
               Cancel
@@ -253,18 +251,14 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
             </Button>
           </CardFooter>
         </Card>
-      )}
+      }
 
-      {!isAdding && (
-        <Button
-          className="w-full"
-          variant="outline"
-          onClick={() => setIsAdding(true)}
-        >
+      {
+        <Button className="w-full" variant="outline">
           <PlusCircle className="h-4 w-4 mr-2" />
           Add {type}
         </Button>
-      )}
+      }
     </div>
   );
 }

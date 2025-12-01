@@ -36,17 +36,6 @@ export interface IAssessment {
   updatedAt: Date;
 }
 
-
-export interface IResumeContent {
-  userId: string;
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  content: string;
-  atsScore: number | null;
-  feedback: string | null;
-}
-
 export interface ICoverLetter {
   id: string;
   userId: string;

@@ -1,11 +1,13 @@
 "use server"
+import { IResumeContent } from "@/app/(main)/resume-pre/types";
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-export async function saveResume(content: string) {
+
+export async function createResume({ title }: { title: string }) {
     const { userId } = await auth();
     if (!userId) throw new Error('User not authenticated');
 
@@ -15,28 +17,24 @@ export async function saveResume(content: string) {
     if (!user) throw new Error('User not found');
 
     try {
-        const resume = await db.resume.upsert({
-            where: { userId: user.id },
-            update: {
-                content
-            },
-            create: {
+        const resume = await db.resume.create({
+            data: {
                 userId: user.id,
-                content
+                title,
+                content: ""
             }
         })
-
-        revalidatePath("/resume");
         return resume;
     } catch (error) {
         if (error instanceof Error) {
-            console.log("Error saving resume:", error.message);
+            console.log("Error saving resume:", error);
             throw new Error("Failed to save resume")
         }
     }
+
 }
 
-export async function getResume() {
+export async function getAllResumes() {
     const { userId } = await auth();
     if (!userId) throw new Error('User not authenticated');
 
@@ -45,17 +43,22 @@ export async function getResume() {
     });
     if (!user) throw new Error('User not found');
 
-    return await db.resume.findUnique({
+    const resumes = await db.resume.findMany({
         where: {
             userId: user.id
+        },
+        include: {
+            educations: true,
+            experiences: true,
+            projects: true,
+            personalInfo: true,
         }
     })
+    return resumes as IResumeContent[] | [];
 }
 
-export async function improveWithAI({ current, type }: {
-    current: string,
-    type: string
-}) {
+
+export async function getResumeById(id: string) {
     const { userId } = await auth();
     if (!userId) throw new Error('User not authenticated');
 
@@ -64,29 +67,194 @@ export async function improveWithAI({ current, type }: {
     });
     if (!user) throw new Error('User not found');
 
-    const prompt = `
-    As an expert resume writer, improve the following ${type} description for a ${user.industry} professional.
-    Make it more impactful, quantifiable, and aligned with industry standards.
-    Current content: "${current}"
+    const resume = await db.resume.findUnique({
+        where: {
+            id: id
+        },
+        include: {
+            educations: true,
+            experiences: true,
+            projects: true,
+            personalInfo: true,
+        }
+    })
 
-    Requirements:
-    1. Use action verbs
-    2. Include metrics and results where possible
-    3. Highlight relevant technical skills
-    4. Keep it concise but detailed
-    5. Focus on achievements over responsibilities
-    6. Use industry-specific keywords
-    
-    Format the response as a single paragraph without any additional text or explanations.
-  `;
+    return resume as IResumeContent | null;
+}
+
+export const updateResumeContent = async (id: string, data: IResumeContent) => {
+    // Destructure fields from data
+    const {
+        content,
+        atsScore,
+        accentColor,
+        template,
+        title,
+        json,
+        feedback,
+        personalInfo,
+        professional_summary,
+        experiences,
+        educations,
+        projects,
+        skills
+    } = data;
+
+    // Prepare update object for main Resume
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = {
+        content,
+        atsScore,
+        accentColor,
+        template,
+        title,
+        json,
+        feedback,
+        skills,
+        professional_summary
+        // professional_summary is not a direct field in Resume, but could be stored in json or feedback
+    };
+
+    // Update related models
+    // 1. Personal Info (update if exists, else create)
+    if (personalInfo) {
+        // Remove id and resumeId from update/create
+        const { id: _id, resumeId: _resumeId, ...infoFields } = personalInfo;
+        updateData.personalInfo = {
+            upsert: {
+                update: { ...infoFields },
+                create: { ...infoFields }
+            }
+        };
+    }
+    // No other nested upserts or related fields require this treatment.
+
+    // 2. Experiences (upsert each, remove id/resumeId)
+    if (experiences) {
+        updateData.experiences = {
+            deleteMany: {},
+            upsert: experiences.map(exp => {
+                const { id: _id, resumeId: _resumeId, startDate, endDate, is_current, ...rest } = exp;
+                return {
+                    where: {
+                        id: (exp).id || undefined,
+                    },
+                    update: {
+                        ...rest,
+                        startDate: startDate,
+                        endDate: endDate,
+                        isCurrent: is_current,
+                    },
+                    create: {
+                        ...rest,
+                        startDate: startDate,
+                        endDate: endDate,
+                        isCurrent: is_current,
+                    }
+                };
+            })
+        };
+    }
+
+    // 3. Educations (upsert each, remove id/resumeId)
+    if (educations) {
+        updateData.educations = {
+            deleteMany: {},
+            upsert: educations.map(edu => {
+                const { id: _id, resumeId: _resumeId, graduationDate, ...rest } = edu;
+                return {
+                    where: {
+                        id: (edu).id || undefined,
+                    },
+                    update: {
+                        ...rest,
+                        graduationDate: graduationDate,
+                    },
+                    create: {
+                        ...rest,
+                        graduationDate: graduationDate,
+                    }
+                };
+            })
+        };
+    }
+
+    // 4. Projects (upsert each, remove id/resumeId)
+    if (projects) {
+        updateData.projects = {
+            deleteMany: {},
+            upsert: projects.map(proj => {
+                const { id: _id, resumeId: _resumeId, ...rest } = proj;
+                return {
+                    where: {
+                        id: (proj).id || undefined,
+                    },
+                    update: {
+                        ...rest,
+                    },
+                    create: {
+                        ...rest,
+                    }
+                };
+            })
+        };
+    }
+
+    // Update Resume
+    const updated = await db.resume.update({
+        where: { id },
+        data: updateData,
+        include: {
+            personalInfo: true,
+            experiences: true,
+            educations: true,
+            projects: true,
+        }
+    });
+    revalidatePath("/resume-pre");
+    return updated;
+}
+
+export async function improveWithAI({
+    current,
+    type,
+}: {
+    current: string;
+    type: string;
+}) {
+    const { userId } = await auth();
+    if (!userId) throw new Error("User not authenticated");
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    const basePrompt = `
+        You are a professional resume writer specializing in ATS-optimized content for ${user.industry} professionals.
+        Make it more impactful, quantifiable, and aligned with industry standards.
+        Improve the following ${type} content:
+        """${current}"""
+
+        General rules:
+            1. Use action verbs
+            2. Include metrics and results where possible
+            3. Highlight relevant technical skills
+            4. Keep it concise but detailed
+            5. Focus on achievements over responsibilities
+            6. Use industry-specific keywords
+            7. Limit to 3-4 sentences (about 40 words)
+        Format the response as a single paragraph without any additional text or explanations.
+        `;
+
+    const prompt = basePrompt;
 
     try {
         const result = await model.generateContent(prompt);
-        const response = result.response;
-        const improvedContent = response.text().trim();
-        return improvedContent;
+        return result.response.text().trim();
     } catch (error) {
-        console.error("Error improving content:", error);
+        console.error("AI improve fail:", error);
         throw new Error("Failed to improve content");
     }
 }

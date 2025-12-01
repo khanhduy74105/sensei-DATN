@@ -78,6 +78,15 @@
   --sidebar-ring: rgb(161, 161, 161);
 }
 
+:root {
+    body[data-scroll-locked][data-scroll-locked] {
+      overflow: auto !important;
+    }
+    body[data-scroll-locked] {
+      margin-right: 0 !important;
+    }
+  }
+
 .dark {
   --background: rgb(10, 10, 10);
   --foreground: rgb(250, 250, 250);

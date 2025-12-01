@@ -25,7 +25,7 @@ model User {
   // Relations
   skills             String[] // Array of skills
   assessments        Assessment[]
-  resume             Resume?
+  resume             Resume[]
   coverLetter        CoverLetter[]
   liveMockInterviews LiveMockInterview[]
 }
@@ -45,14 +45,70 @@ model Assessment {
 }
 
 model Resume {
-  id        String   @id @default(cuid())
-  userId    String   @unique // One resume per user
-  user      User     @relation(fields: [userId], references: [id])
-  content   String   @db.Text // Markdown content
-  atsScore  Float?
-  feedback  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String              @id @default(cuid())
+  userId               String // Removed @unique so user can have many resumes
+  user                 User                @relation(fields: [userId], references: [id])
+  content              String              @db.Text // Markdown content
+  title                String?
+  atsScore             Float?
+  feedback             String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  json                 String?
+  template             String?             @default("classic")
+  accentColor          String?             @default("neutral")
+  professional_summary String?
+  personalInfo         ResumePersonalInfo?
+  experiences          ResumeExperience[]
+  educations           ResumeEducation[]
+  projects             ResumeProject[]
+  skills               String[] // Array of skills
+}
+
+model ResumePersonalInfo {
+  id         String  @id @default(cuid())
+  resumeId   String  @unique
+  resume     Resume  @relation(fields: [resumeId], references: [id])
+  image      String?
+  fullName   String?
+  profession String?
+  phone      String?
+  email      String?
+  location   String?
+  linkedin   String?
+  website    String?
+}
+
+model ResumeExperience {
+  id           String   @id @default(cuid())
+  resumeId     String
+  resume       Resume   @relation(fields: [resumeId], references: [id])
+  title        String
+  organization String
+  description  String
+  startDate    String
+  endDate      String?
+  isCurrent    Boolean?
+}
+
+model ResumeEducation {
+  id             String  @id @default(cuid())
+  resumeId       String
+  resume         Resume  @relation(fields: [resumeId], references: [id])
+  graduationDate String
+  institution    String
+  degree         String
+  field          String
+  gpa            String?
+}
+
+model ResumeProject {
+  id          String @id @default(cuid())
+  resumeId    String
+  resume      Resume @relation(fields: [resumeId], references: [id])
+  name        String
+  description String
+  type        String
 }
 
 model CoverLetter {
