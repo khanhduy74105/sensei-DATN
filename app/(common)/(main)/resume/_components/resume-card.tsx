@@ -35,7 +35,7 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
           className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition"
           size={"icon"}
           onClick={() => {
-            router.push(`/resume-pre/${resume.id}`);
+            router.push(`/resume/${resume.id}`);
           }}
         >
           <FileEdit className="w-4 h-4" />

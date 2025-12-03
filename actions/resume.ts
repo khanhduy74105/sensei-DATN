@@ -1,5 +1,5 @@
 "use server"
-import { IResumeContent } from "@/app/(main)/resume-pre/types";
+import { IResumeContent } from "@/app/(common)/(main)/resume/types";
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -67,6 +67,22 @@ export async function getResumeById(id: string) {
     });
     if (!user) throw new Error('User not found');
 
+    const resume = await db.resume.findUnique({
+        where: {
+            id: id
+        },
+        include: {
+            educations: true,
+            experiences: true,
+            projects: true,
+            personalInfo: true,
+        }
+    })
+
+    return resume as IResumeContent | null;
+}
+
+export async function getResumePublicById (id: string) {
     const resume = await db.resume.findUnique({
         where: {
             id: id
@@ -211,8 +227,39 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
             projects: true,
         }
     });
-    revalidatePath("/resume-pre");
+    revalidatePath("/resume");
     return updated;
+}
+
+export async function uploadImage(file: Blob): Promise<string> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('User not authenticated');
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId }
+    });
+    if (!user) throw new Error('User not found');
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.CLDNR_UPLOAD_PRESET!);
+
+    const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.CLDNR_CLOUD_NAME}/image/upload`,
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+    const data = await response.json();
+
+    if (data.secure_url) {
+        return data.secure_url;
+    } else {
+        console.error(data);
+        throw new Error("Image upload failed: " + JSON.stringify(data));
+    }
 }
 
 export async function improveWithAI({

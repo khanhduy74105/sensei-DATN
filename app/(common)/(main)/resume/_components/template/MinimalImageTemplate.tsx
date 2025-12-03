@@ -1,7 +1,7 @@
 import {
   ACCENT_COLOR_OPTIONS,
   ITempleteProps,
-} from "@/app/(main)/resume-pre/types";
+} from "@/app/(common)/(main)/resume/types";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 

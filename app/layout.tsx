@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import Header from "@/components/header";
 import { dark } from '@clerk/themes'
 import {
   ClerkProvider
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
@@ -37,7 +36,6 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Header />
             <main className="min-h-screen">{children}</main>
             <Toaster />
           </ThemeProvider>

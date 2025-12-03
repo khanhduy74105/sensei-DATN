@@ -29,7 +29,7 @@ const AddNewResumeTrigger = () => {
       const resume = await createResume({ title });
       if (resume) {
         toast.success("Resume created successfully");
-        router.push(`/resume-pre/${resume?.id}`);
+        router.push(`/resume/${resume?.id}`);
       } else {
         toast.error("Failed to create resume");
       }

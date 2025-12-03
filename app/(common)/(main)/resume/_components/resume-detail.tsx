@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Download, Eye, Link, Loader2 } from "lucide-react";
 import React, { useState } from "react";
-import ResumeEditorHeader from "../_components/resume-editor-header";
-import ResumeEditorContent from "../_components/resume-editor-content";
+import ResumeEditorHeader from "./resume-editor-header";
+import ResumeEditorContent from "./resume-editor-content";
 import {
   IResumeContent,
   ITemplateData,
@@ -16,10 +16,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { templateDataSchema } from "@/app/lib/schema";
-import ClassicTemplate from "../_components/template/ClassicTemplate";
-import MinimalImageTemplate from "../_components/template/MinimalImageTemplate";
-import ModernTemplate from "../_components/template/ModernTemplate";
-import MinimalTemplate from "../_components/template/MinimalTemplate";
+import ClassicTemplate from "./template/ClassicTemplate";
+import MinimalImageTemplate from "./template/MinimalImageTemplate";
+import ModernTemplate from "./template/ModernTemplate";
+import MinimalTemplate from "./template/MinimalTemplate";
 import { toast } from "sonner";
 import { updateResumeContent } from "@/actions/resume";
 import { MoonLoader } from "react-spinners";
@@ -69,7 +69,6 @@ export default function ResumeBuilderDetailPage({
   const formValues = watch();
 
   const onSubmit = async (data: Partial<IResumeContent>) => {
-    console.log("dataaa", data);
     setLoading(true);
 
     try {
@@ -123,7 +122,7 @@ export default function ResumeBuilderDetailPage({
         <Button
           variant="ghost"
           onClick={() => {
-            router.push("/resume-pre");
+            router.push("/resume");
           }}
         >
           <ChevronLeft className="mr-2" />

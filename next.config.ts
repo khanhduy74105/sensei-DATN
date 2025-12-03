@@ -12,7 +12,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "randomuser.me",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      }
     ],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '3mb',
+    },
   },
 };
 

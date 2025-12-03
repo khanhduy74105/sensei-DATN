@@ -1,4 +1,4 @@
-import { ACCENT_COLOR_OPTIONS, ITempleteProps } from "@/app/(main)/resume-pre/types";
+import { ACCENT_COLOR_OPTIONS, ITempleteProps } from "@/app/(common)/(main)/resume/types";
 import { formatDate } from "@/lib/utils";
 import { Mail, Phone, MapPin, Linkedin, Globe } from "lucide-react";
 
@@ -76,7 +76,7 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
                                     </div>
                                 </div>
                                 {exp.description && (
-                                    <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+                                    <div className="text-gray-700 leading-relaxed whitespace-line">
                                         {exp.description}
                                     </div>
                                 )}

@@ -9,6 +9,9 @@ import {
 } from "react-hook-form";
 import { IResumePersonalData, ITemplateData } from "../types";
 import Image from "next/image";
+import { uploadImage } from "@/actions/resume";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface IResumeEditorPersonalInfoProps {
   register: UseFormRegister<ITemplateData>;
@@ -211,16 +214,22 @@ const ResumeEditorPersonalInfo = ({
   register,
   formValues,
 }: IResumeEditorPersonalInfoProps) => {
+  const [uploading, setUploading] = useState(false);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setValue("personalInfo.image", url);
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const url = await uploadImage(file);
+      setValue("personalInfo.image", url);
+    } catch (error) {
+      toast.error("Failed to upload image. Please try again.");
+    }
+    setUploading(false);
   };
 
   console.log(formValues.personalInfo?.image);
-  
 
   return (
     <div className="space-y-5">
@@ -230,26 +239,32 @@ const ResumeEditorPersonalInfo = ({
 
       {/* IMAGE UPLOAD */}
       <div className="flex items-center gap-2">
-        <label className="cursor-pointer">
-          {formValues.personalInfo?.image ? (
-            <Image
-              alt="avatar"
-              height={`100`}
-              width={`100`}
-              className="w-16 h-16 rounded-full object-cover ring ring-slate-300 hover:opacity-80"
-              src={formValues.personalInfo?.image}
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-gray-200 ring ring-slate-300" />
-          )}
+        {uploading ? (
+          <div className="w-16 h-16 rounded-full bg-gray-200 ring ring-slate-300 flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+          </div>
+        ) : (
+          <label className="cursor-pointer">
+            {formValues.personalInfo?.image ? (
+              <Image
+                alt="avatar"
+                height={100}
+                width={100}
+                className="w-16 h-16 rounded-full object-cover ring ring-slate-300 hover:opacity-80"
+                src={formValues.personalInfo.image}
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gray-200 ring ring-slate-300" />
+            )}
 
-          <input
-            type="file"
-            accept="image/jpeg, image/png"
-            className="hidden"
-            onChange={handleImageChange}
-          />
-        </label>
+            <input
+              type="file"
+              accept="image/jpeg, image/png"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </label>
+        )}
 
         <div className="flex flex-col gap-1 pl-4 text-sm">
           <p>Update resume image</p>
