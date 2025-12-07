@@ -135,7 +135,7 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
     // 1. Personal Info (update if exists, else create)
     if (personalInfo) {
         // Remove id and resumeId from update/create
-        const { id: _id, resumeId: _resumeId, ...infoFields } = personalInfo;
+        const { id, resumeId, ...infoFields } = personalInfo;
         updateData.personalInfo = {
             upsert: {
                 update: { ...infoFields },
@@ -150,7 +150,7 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
         updateData.experiences = {
             deleteMany: {},
             upsert: experiences.map(exp => {
-                const { id: _id, resumeId: _resumeId, startDate, endDate, is_current, ...rest } = exp;
+                const { id, resumeId, startDate, endDate, is_current, ...rest } = exp;
                 return {
                     where: {
                         id: (exp).id || undefined,
@@ -177,7 +177,7 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
         updateData.educations = {
             deleteMany: {},
             upsert: educations.map(edu => {
-                const { id: _id, resumeId: _resumeId, graduationDate, ...rest } = edu;
+                const { id, resumeId, graduationDate, ...rest } = edu;
                 return {
                     where: {
                         id: (edu).id || undefined,
@@ -200,7 +200,7 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
         updateData.projects = {
             deleteMany: {},
             upsert: projects.map(proj => {
-                const { id: _id, resumeId: _resumeId, ...rest } = proj;
+                const { id, resumeId, ...rest } = proj;
                 return {
                     where: {
                         id: (proj).id || undefined,

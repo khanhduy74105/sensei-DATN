@@ -22,7 +22,6 @@ import ModernTemplate from "./template/ModernTemplate";
 import MinimalTemplate from "./template/MinimalTemplate";
 import { toast } from "sonner";
 import { updateResumeContent } from "@/actions/resume";
-import { MoonLoader } from "react-spinners";
 import { useRouter } from "next/navigation";
 
 const stepOrder: KeyOfITemplateData[] = [
@@ -114,11 +113,13 @@ export default function ResumeBuilderDetailPage({
     setValue("accentColor", color);
   };
 
-  console.log("templateType", templateType, accentColor);
+  const onDownload = () => {
+    window.print();
+  };
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center">
+    <div>
+      <div id="resume-actions" className="flex justify-between items-center">
         <Button
           variant="ghost"
           onClick={() => {
@@ -138,7 +139,7 @@ export default function ResumeBuilderDetailPage({
             <Eye />
             Public
           </Button>
-          <Button size={"sm"} color="green">
+          <Button size={"sm"} color="green" onClick={onDownload}>
             <Download />
             Download
           </Button>
@@ -146,7 +147,7 @@ export default function ResumeBuilderDetailPage({
       </div>
 
       <div className="flex flex-wrap w-full mt-6 gap-4">
-        <div className=" flex-1 min-w-[400px]">
+        <div id="resume-editor" className="flex-1 min-w-[400px]">
           <div className="w-full bg-card border border-border rounded-md flex flex-col shadow-sm relative">
             <Progress
               value={(100 * currentIndex) / (stepOrder.length - 1)}
@@ -190,7 +191,7 @@ export default function ResumeBuilderDetailPage({
           </div>
         </div>
 
-        <div className=" flex-1 min-w-[400px]">
+        <div id="resume-review" className=" flex-1 min-w-[400px]">
           {templateType === "classic" ? (
             <ClassicTemplate data={formValues} accentColor={accentColor} />
           ) : null}

@@ -4,6 +4,7 @@ import {
 } from "@/app/(common)/(main)/resume/types";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import Image from "next/image";
 
 const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
   const colorRGB = ACCENT_COLOR_OPTIONS.find(
@@ -17,22 +18,44 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
           {/* Image */}
           {data.personalInfo?.image &&
           typeof data.personalInfo.image === "string" ? (
-            <div className="mb-6">
-              <img
-                src={data.personalInfo.image}
-                alt="Profile"
-                className="w-32 h-32 object-cover rounded-full mx-auto"
-                style={{ background: colorRGB + "70" }}
-              />
+            <div className="mb-6 flex justify-center">
+              <div
+                className="relative w-32 h-32"
+                style={{ borderRadius: "50%", overflow: "hidden" }}
+              >
+                <Image
+                  src={data.personalInfo.image}
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                  style={{
+                    borderRadius: "50%",
+                  }}
+                />
+                <div
+                  className="absolute inset-0 -z-10"
+                  style={{ background: colorRGB + "70" }}
+                />
+              </div>
             </div>
           ) : data.personalInfo?.image &&
             typeof data.personalInfo.image === "object" ? (
-            <div className="mb-6">
-              <img
-                src={URL.createObjectURL(data.personalInfo.image)}
-                alt="Profile"
-                className="w-32 h-32 object-cover rounded-full mx-auto"
-              />
+            <div className="mb-6 flex justify-center">
+              <div
+                className="relative w-32 h-32"
+                style={{ borderRadius: "50%", overflow: "hidden" }}
+              >
+                <Image
+                  src={URL.createObjectURL(data.personalInfo.image)}
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                  style={{
+                    borderRadius: "50%",
+                  }}
+                  unoptimized
+                />
+              </div>
             </div>
           ) : null}
         </div>

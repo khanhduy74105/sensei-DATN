@@ -45,50 +45,7 @@
 
 :root {
   --radius: 0.625rem;
-  --background: rgb(255, 255, 255);
-  --foreground: rgb(10, 10, 10);
-  --card: rgb(255, 255, 255);
-  --card-foreground: rgb(10, 10, 10);
-  --popover: rgb(255, 255, 255);
-  --popover-foreground: rgb(10, 10, 10);
-  --primary: rgb(199, 35, 35);
-  --primary-foreground: rgb(250, 250, 250);
-  --secondary: rgb(245, 245, 245);
-  --secondary-foreground: rgb(23, 23, 23);
-  --muted: rgb(245, 245, 245);
-  --muted-foreground: rgb(115, 115, 115);
-  --accent: rgb(245, 245, 245);
-  --accent-foreground: rgb(23, 23, 23);
-  --destructive: rgb(231, 0, 11);
-  --border: rgb(229, 229, 229);
-  --input: rgb(229, 229, 229);
-  --ring: rgb(161, 161, 161);
-  --chart-1: rgb(245, 73, 0);
-  --chart-2: rgb(0, 150, 137);
-  --chart-3: rgb(16, 78, 100);
-  --chart-4: rgb(255, 185, 0);
-  --chart-5: rgb(254, 154, 0);
-  --sidebar: rgb(250, 250, 250);
-  --sidebar-foreground: rgb(10, 10, 10);
-  --sidebar-primary: rgb(23, 23, 23);
-  --sidebar-primary-foreground: rgb(250, 250, 250);
-  --sidebar-accent: rgb(245, 245, 245);
-  --sidebar-accent-foreground: rgb(23, 23, 23);
-  --sidebar-border: rgb(229, 229, 229);
-  --sidebar-ring: rgb(161, 161, 161);
-}
-
-:root {
-    body[data-scroll-locked][data-scroll-locked] {
-      overflow: auto !important;
-    }
-    body[data-scroll-locked] {
-      margin-right: 0 !important;
-    }
-  }
-
-.dark {
-  --background: rgb(10, 10, 10);
+    --background: rgb(10, 10, 10);
   --foreground: rgb(250, 250, 250);
   --card: rgb(23, 23, 23);
   --card-foreground: rgb(250, 250, 250);
@@ -120,6 +77,15 @@
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: rgb(115, 115, 115);
 }
+
+:root {
+    body[data-scroll-locked][data-scroll-locked] {
+      overflow: auto !important;
+    }
+    body[data-scroll-locked] {
+      margin-right: 0 !important;
+    }
+  }
 
 @layer base {
   * {
@@ -190,3 +156,33 @@
 .hero-image.scrolled {
   transform: rotateX(0deg) scale(1) translateY(40px);
 }
+@media print {
+  body * {
+    visibility: hidden;
+    min-height: unset !important;
+  }
+  /* Chỉ hiển thị resume */
+  #main-layout {
+    margin-top: unset !important;
+    margin-bottom: unset !important;
+  }
+  #main-header, #resume-editor, #resume-actions {
+    display: none;
+  }
+  #resume-review,
+  #resume-review * {
+    visibility: visible;
+  }
+
+  /* Đặt resume lên đầu trang in */
+  /* #resume-review {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  } */
+
+    /* Fix browser auto removing background */
+
+}
+
