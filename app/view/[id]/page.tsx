@@ -4,6 +4,7 @@ import MinimalImageTemplate from "@/app/(common)/(main)/resume/_components/templ
 import MinimalTemplate from "@/app/(common)/(main)/resume/_components/template/MinimalTemplate";
 import ModernTemplate from "@/app/(common)/(main)/resume/_components/template/ModernTemplate";
 import { ITemplateData } from "@/app/(common)/(main)/resume/types";
+import { notFound } from "next/navigation";
 import React from "react";
 
 interface TProps {
@@ -15,6 +16,9 @@ interface TProps {
 export default async function page(props: TProps) {
   const params = await props.params;
   const resume = await getResumePublicById(params.id);
+  if (!resume) {
+    notFound();
+  }
   const templateType = resume?.template || "classic";
 
   const accentColor = resume?.accentColor || "blue";

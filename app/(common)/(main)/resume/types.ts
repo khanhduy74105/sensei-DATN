@@ -66,6 +66,7 @@ export interface IResumeContent {
     accentColor: string | null;
     template: string | null;
     json: string | null;
+    isPublic: boolean | null;
     feedback: string | null;
     personalInfo?: IResumePersonalData,
     professional_summary?: string
@@ -78,6 +79,7 @@ export interface IResumeContent {
 export interface ITemplateData {
     template?: string;
     accentColor?: string;
+    isPublic?: boolean;
     personalInfo?: IResumePersonalData,
     professional_summary?: string
     experiences?: IResumeExperience[];

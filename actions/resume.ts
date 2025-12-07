@@ -83,9 +83,14 @@ export async function getResumeById(id: string) {
 }
 
 export async function getResumePublicById (id: string) {
+    const { userId } = await auth();
     const resume = await db.resume.findUnique({
         where: {
-            id: id
+            id: id,
+            OR: [
+                { isPublic: true },
+                { userId: userId ? (await db.user.findUnique({ where: { clerkUserId: userId } }))?.id : "" }
+            ]
         },
         include: {
             educations: true,
@@ -230,6 +235,49 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
     revalidatePath("/resume");
     return updated;
 }
+
+export async function deleteResume(id: string) {
+    const { userId } = await auth();
+    if (!userId) throw new Error('User not authenticated');
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId }
+    });
+    if (!user) throw new Error('User not found');
+    const deleted = await db.resume.delete({
+        where: {
+            id: id,
+            userId: user.id
+        },
+        include: {
+            educations: true,
+            experiences: true,
+            projects: true,
+            personalInfo: true,
+        }
+    });
+    revalidatePath("/resume");
+    return Boolean(id === deleted.id);
+}
+
+export async function toggleResumePublicStatus(id: string, isPublic: boolean) {
+    const { userId } = await auth();
+    if (!userId) throw new Error('User not authenticated');
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId }
+    });
+    if (!user) throw new Error('User not found');
+    const updated = await db.resume.update({
+        where: {
+            id: id,
+            userId: user.id
+        },
+        data: {
+            isPublic: isPublic
+        }
+    });
+    revalidatePath("/resume");
+    return Boolean(updated.id === id);
+};
 
 export async function uploadImage(file: Blob): Promise<string> {
     const { userId } = await auth();

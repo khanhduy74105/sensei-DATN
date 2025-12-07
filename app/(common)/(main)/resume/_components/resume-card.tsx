@@ -4,9 +4,25 @@ import { FileEdit, Trash } from "lucide-react";
 import React from "react";
 import { IResumeContent } from "../types";
 import { useRouter } from "next/navigation";
+import { deleteResume } from "@/actions/resume";
+import { toast } from "sonner";
 
 const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
   const router = useRouter();
+  const handleDelete = async () => {
+    if (resume.id) {
+      await deleteResume(resume.id)
+        .then(() => {
+          toast.success("Resume deleted successfully");
+        })
+        .catch((error) => {
+          toast.error(error.message || "Failed to delete resume");
+        })
+        .finally(() => {
+          router.refresh();
+        });
+    }
+  };
   return (
     <div className="relative w-44 h-66 min-h-[11rem] rounded-2xl flex items-center justify-center flex-col gap-2 p-2 border border-neutral-200 group cursor-pointer">
       {/* Normal content */}
@@ -44,7 +60,9 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
         <Button
           className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition"
           size={"icon"}
-          onClick={() => {}}
+          onClick={() => {
+            handleDelete();
+          }}
         >
           <Trash className="w-4 h-4" />
         </Button>

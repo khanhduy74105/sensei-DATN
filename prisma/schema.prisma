@@ -14,7 +14,7 @@ model User {
   name            String?
   imageUrl        String?
   industry        String? // Combined industry-subindustry (e.g., "tech-software-development")
-  industryInsight IndustryInsight? @relation(fields: [industry], references: [industry])
+  industryInsight IndustryInsight? @relation(fields: [industry], references: [industry], onDelete: Cascade)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -33,7 +33,7 @@ model User {
 model Assessment {
   id             String   @id @default(cuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   quizScore      Float // Overall quiz score
   questions      Json[] // Array of {question, answer, userAnswer, isCorrect}
   category       String // "Technical", "Behavioral", etc.
@@ -47,11 +47,12 @@ model Assessment {
 model Resume {
   id                   String              @id @default(cuid())
   userId               String // Removed @unique so user can have many resumes
-  user                 User                @relation(fields: [userId], references: [id])
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   content              String              @db.Text // Markdown content
   title                String?
   atsScore             Float?
   feedback             String?
+  isPublic             Boolean             @default(false)
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
   json                 String?
@@ -68,7 +69,7 @@ model Resume {
 model ResumePersonalInfo {
   id         String  @id @default(cuid())
   resumeId   String  @unique
-  resume     Resume  @relation(fields: [resumeId], references: [id])
+  resume     Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   image      String?
   fullName   String?
   profession String?
@@ -82,7 +83,7 @@ model ResumePersonalInfo {
 model ResumeExperience {
   id           String   @id @default(cuid())
   resumeId     String
-  resume       Resume   @relation(fields: [resumeId], references: [id])
+  resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   title        String
   organization String
   description  String
@@ -94,7 +95,7 @@ model ResumeExperience {
 model ResumeEducation {
   id             String  @id @default(cuid())
   resumeId       String
-  resume         Resume  @relation(fields: [resumeId], references: [id])
+  resume         Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   graduationDate String
   institution    String
   degree         String
@@ -105,7 +106,7 @@ model ResumeEducation {
 model ResumeProject {
   id          String @id @default(cuid())
   resumeId    String
-  resume      Resume @relation(fields: [resumeId], references: [id])
+  resume      Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   name        String
   description String
   type        String
@@ -114,7 +115,7 @@ model ResumeProject {
 model CoverLetter {
   id             String   @id @default(cuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   content        String // Markdown content
   jobDescription String?
   companyName    String // Name of the company applying to
@@ -158,7 +159,7 @@ model IndustryInsight {
 model LiveMockInterview {
   id                    String                  @id @default(cuid())
   userId                String
-  user                  User                    @relation(fields: [userId], references: [id])
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   yoes                  Int                     @default(0) // Years of experience
   role                  String // Role applying for
   description           String // Job description
@@ -172,7 +173,7 @@ model LiveMockInterview {
 model LiveInterviewQuestion {
   id                  String            @id @default(cuid())
   liveMockInterviewId String
-  liveMockInterview   LiveMockInterview @relation(fields: [liveMockInterviewId], references: [id])
+  liveMockInterview   LiveMockInterview @relation(fields: [liveMockInterviewId], references: [id], onDelete: Cascade)
   question            String
   correctAnswer       String
   feedback            String?

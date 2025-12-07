@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Download, Eye, Link, Loader2 } from "lucide-react";
+import { ChevronLeft, Download, Eye, EyeOff, Link, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import ResumeEditorHeader from "./resume-editor-header";
 import ResumeEditorContent from "./resume-editor-content";
@@ -21,8 +21,9 @@ import MinimalImageTemplate from "./template/MinimalImageTemplate";
 import ModernTemplate from "./template/ModernTemplate";
 import MinimalTemplate from "./template/MinimalTemplate";
 import { toast } from "sonner";
-import { updateResumeContent } from "@/actions/resume";
+import { toggleResumePublicStatus, updateResumeContent } from "@/actions/resume";
 import { useRouter } from "next/navigation";
+import { set } from "zod";
 
 const stepOrder: KeyOfITemplateData[] = [
   KeyOfITemplateData.personalInfo,
@@ -45,6 +46,7 @@ export default function ResumeBuilderDetailPage({
   const router = useRouter();
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [isPublic, setIsPublic] = useState<boolean>(initialData.isPublic || false);
 
   const currentIndex = stepOrder.indexOf(fieldStep);
 
@@ -58,6 +60,7 @@ export default function ResumeBuilderDetailPage({
     resolver: zodResolver(templateDataSchema),
     defaultValues: {
       ...initialData,
+      isPublic: initialData.isPublic || false,
       accentColor: initialData.accentColor || "blue",
       template: initialData.template || "classic",
     },
@@ -113,6 +116,22 @@ export default function ResumeBuilderDetailPage({
     setValue("accentColor", color);
   };
 
+  const toggleAccessibility = async () => {
+    await toggleResumePublicStatus(initialData.id, !isPublic);
+    setIsPublic(!isPublic);
+  }
+
+  const onShare = () => {
+    const shareUrl = `${window.location.origin}/view/${initialData.id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: `${initialData.personalInfo?.fullName}'s Resume - ${initialData.title}`,
+        url: shareUrl
+      }).catch((error) => console.log('Error sharing', error));
+    } else {
+      toast.info("Sharing is not supported in this browser.");
+    }
+  }
   const onDownload = () => {
     window.print();
   };
@@ -131,13 +150,15 @@ export default function ResumeBuilderDetailPage({
         </Button>
 
         <div className="">
-          <Button size={"sm"} className="mr-2" color={"blue"}>
+          {isPublic && <Button size={"sm"} className="mr-2" color={"blue"} onClick={onShare}>
             <Link />
             Share
-          </Button>
-          <Button size={"sm"} className="mr-2" color={"purple"}>
-            <Eye />
-            Public
+          </Button>}
+          <Button size={"sm"} className="mr-2" color={"purple"} onClick={() => {
+            toggleAccessibility();
+          }}>
+            {isPublic ? <Eye /> : <EyeOff />}
+            {isPublic ? 'Public' : 'Private'}
           </Button>
           <Button size={"sm"} color="green" onClick={onDownload}>
             <Download />
