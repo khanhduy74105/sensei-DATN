@@ -56,7 +56,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
                   <h3 className="text-lg font-medium">{exp.title}</h3>
                   <span className="text-sm text-gray-500">
                     {formatDate(exp.startDate)} -{" "}
-                    {exp.is_current ? "Present" : formatDate(exp.endDate!)}
+                    {exp.isCurrent ? "Present" : formatDate(exp.endDate!)}
                   </span>
                 </div>
                 <p className="text-gray-600 mb-2">{exp.organization}</p>

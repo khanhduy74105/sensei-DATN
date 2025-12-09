@@ -169,7 +169,7 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
                       </h3>
                       <span className="text-xs text-zinc-500">
                         {formatDate(exp.startDate)} -{" "}
-                        {exp.is_current ? "Present" : formatDate(exp.endDate!)}
+                        {exp.isCurrent ? "Present" : formatDate(exp.endDate!)}
                       </span>
                     </div>
                     <p className="text-sm mb-2" style={{ color: colorRGB }}>

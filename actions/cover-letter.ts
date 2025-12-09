@@ -3,10 +3,8 @@
 import { db } from "@/lib/prisma";
 import { ICoverLetter } from "@/types";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+import { model } from "../lib/genai";
+import getGeneratedAIContent from "@/lib/openRouter";
 
 export async function generateCoverLetter(data: Partial<ICoverLetter>) {
     const { userId } = await auth();
@@ -44,7 +42,7 @@ export async function generateCoverLetter(data: Partial<ICoverLetter>) {
   `;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await getGeneratedAIContent(prompt);
         const content = result.response.text().trim();
 
         const coverLetter = await db.coverLetter.create({

@@ -1,7 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Download, Eye, EyeOff, Link, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  Download,
+  Edit,
+  Eye,
+  EyeOff,
+  Link,
+  Loader2,
+} from "lucide-react";
 import React, { useState } from "react";
 import ResumeEditorHeader from "./resume-editor-header";
 import ResumeEditorContent from "./resume-editor-content";
@@ -21,9 +29,12 @@ import MinimalImageTemplate from "./template/MinimalImageTemplate";
 import ModernTemplate from "./template/ModernTemplate";
 import MinimalTemplate from "./template/MinimalTemplate";
 import { toast } from "sonner";
-import { toggleResumePublicStatus, updateResumeContent } from "@/actions/resume";
+import {
+  toggleResumePublicStatus,
+  updateResumeContent,
+} from "@/actions/resume";
 import { useRouter } from "next/navigation";
-import { set } from "zod";
+import { Input } from "@/components/ui/input";
 
 const stepOrder: KeyOfITemplateData[] = [
   KeyOfITemplateData.personalInfo,
@@ -46,7 +57,9 @@ export default function ResumeBuilderDetailPage({
   const router = useRouter();
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [isPublic, setIsPublic] = useState<boolean>(initialData.isPublic || false);
+  const [isPublic, setIsPublic] = useState<boolean>(
+    initialData.isPublic || false
+  );
 
   const currentIndex = stepOrder.indexOf(fieldStep);
 
@@ -60,6 +73,7 @@ export default function ResumeBuilderDetailPage({
     resolver: zodResolver(templateDataSchema),
     defaultValues: {
       ...initialData,
+      title: initialData.title || '',
       isPublic: initialData.isPublic || false,
       accentColor: initialData.accentColor || "blue",
       template: initialData.template || "classic",
@@ -69,6 +83,9 @@ export default function ResumeBuilderDetailPage({
   });
 
   const formValues = watch();
+
+  // State for editing title
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   const onSubmit = async (data: Partial<IResumeContent>) => {
     setLoading(true);
@@ -102,6 +119,7 @@ export default function ResumeBuilderDetailPage({
         ...initialData,
         ...formValues,
       });
+      router.refresh();
     }
   };
 
@@ -119,19 +137,21 @@ export default function ResumeBuilderDetailPage({
   const toggleAccessibility = async () => {
     await toggleResumePublicStatus(initialData.id, !isPublic);
     setIsPublic(!isPublic);
-  }
+  };
 
   const onShare = () => {
     const shareUrl = `${window.location.origin}/view/${initialData.id}`;
     if (navigator.share) {
-      navigator.share({
-        title: `${initialData.personalInfo?.fullName}'s Resume - ${initialData.title}`,
-        url: shareUrl
-      }).catch((error) => console.log('Error sharing', error));
+      navigator
+        .share({
+          title: `${initialData.personalInfo?.fullName}'s Resume - ${initialData.title}`,
+          url: shareUrl,
+        })
+        .catch((error) => console.log("Error sharing", error));
     } else {
       toast.info("Sharing is not supported in this browser.");
     }
-  }
+  };
   const onDownload = () => {
     window.print();
   };
@@ -150,21 +170,78 @@ export default function ResumeBuilderDetailPage({
         </Button>
 
         <div className="">
-          {isPublic && <Button size={"sm"} className="mr-2" color={"blue"} onClick={onShare}>
-            <Link />
-            Share
-          </Button>}
-          <Button size={"sm"} className="mr-2" color={"purple"} onClick={() => {
-            toggleAccessibility();
-          }}>
+          {isPublic && (
+            <Button
+              size={"sm"}
+              className="mr-2"
+              color={"blue"}
+              onClick={onShare}
+            >
+              <Link />
+              Share
+            </Button>
+          )}
+          <Button
+            size={"sm"}
+            className="mr-2"
+            color={"purple"}
+            onClick={() => {
+              toggleAccessibility();
+            }}
+          >
             {isPublic ? <Eye /> : <EyeOff />}
-            {isPublic ? 'Public' : 'Private'}
+            {isPublic ? "Public" : "Private"}
           </Button>
           <Button size={"sm"} color="green" onClick={onDownload}>
             <Download />
             Download
           </Button>
         </div>
+      </div>
+
+      <div id="resume-title" className="mt-4 max-w-1/2">
+        {isEditingTitle ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={formValues.title}
+              onChange={(e) => {
+                setValue('title', e.target.value)
+              }}
+              className="text-lg"
+            />
+            <Button
+              size={"sm"}
+              onClick={async () => {
+                await onSubmit(formValues);
+                setIsEditingTitle(false);
+              }}
+              disabled={loading || !formValues.title?.trim()}
+            >
+              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Save
+            </Button>
+            <Button
+              size={"sm"}
+              variant="ghost"
+              onClick={() => {
+                setIsEditingTitle(false);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="text-m"> {formValues.title} </span>
+            <Button
+              size={"icon"}
+              variant="ghost"
+              onClick={() => setIsEditingTitle(true)}
+            >
+              <Edit />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap w-full mt-6 gap-4">

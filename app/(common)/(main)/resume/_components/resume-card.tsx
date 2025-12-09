@@ -6,6 +6,7 @@ import { IResumeContent } from "../types";
 import { useRouter } from "next/navigation";
 import { deleteResume } from "@/actions/resume";
 import { toast } from "sonner";
+import Image from "next/image";
 
 const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
   const router = useRouter();
@@ -24,20 +25,30 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
     }
   };
   return (
-    <div className="relative w-44 h-66 min-h-[11rem] rounded-2xl flex items-center justify-center flex-col gap-2 p-2 border border-neutral-200 group cursor-pointer">
-      {/* Normal content */}
-      <div className="flex flex-col flex-auto items-center justify-center">
-        <FileEdit className="h-10 w-10 mb-4 text-neutral-500" />
-        <span className="text-sm overflow-ellipsis">{resume.title}</span>
+    <div className="relative overflow-hidden w-44 h-66 rounded-2xl flex items-center justify-center flex-col gap-2 border border-neutral-200 group cursor-pointer">
+      <div className="absolute top-0 right-0 left-0 bottom-0">
+        <Image
+          src="/resume.png"
+          width={176}
+          height={264}
+          alt="resume"
+          className="w-full h-full shadow-2xl border mx-auto"
+          priority
+        />
       </div>
+      <div className="absolute right-0 left-0 bottom-0 py-4 bg-black/50 flex flex-col items-center justify-center text-white bg-opacity-70 rounded-b-2xl p-2">
+        <div className="flex flex-col flex-auto items-center justify-center">
+          <span className="text-sm overflow-ellipsis">{resume.title}</span>
+        </div>
 
-      <span className="text-xs">
-        {resume.updatedAt.toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}
-      </span>
+        <span className="text-xs">
+          {resume.updatedAt.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
+        </span>
+      </div>
 
       {/* Hover overlay */}
       <div

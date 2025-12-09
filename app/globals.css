@@ -166,7 +166,7 @@
     margin-top: unset !important;
     margin-bottom: unset !important;
   }
-  #main-header, #resume-editor, #resume-actions {
+  #main-header, #resume-title, #resume-editor, #resume-actions {
     display: none;
   }
   #resume-review,

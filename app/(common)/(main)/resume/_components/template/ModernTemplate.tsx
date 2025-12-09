@@ -102,7 +102,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
                     </div>
                     <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded">
                       {formatDate(exp.startDate)} -{" "}
-                      {exp.is_current ? "Present" : formatDate(exp.endDate!)}
+                      {exp.isCurrent ? "Present" : formatDate(exp.endDate!)}
                     </div>
                   </div>
                   {exp.description && (

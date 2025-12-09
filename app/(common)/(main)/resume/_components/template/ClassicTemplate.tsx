@@ -72,7 +72,7 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
                                         <p className="text-gray-700 font-medium">{exp.organization}</p>
                                     </div>
                                     <div className="text-right text-sm text-gray-600">
-                                        <p>{formatDate(exp.startDate)} - {exp.is_current ? "Present" : formatDate(exp.endDate!)}</p>
+                                        <p>{formatDate(exp.startDate)} - {exp.isCurrent ? "Present" : formatDate(exp.endDate!)}</p>
                                     </div>
                                 </div>
                                 {exp.description && (

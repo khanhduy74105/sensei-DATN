@@ -2,10 +2,9 @@
 import { IResumeContent } from "@/app/(common)/(main)/resume/types";
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { model } from "../lib/genai";
 import { revalidatePath } from "next/cache";
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+import getGeneratedAIContent from "@/lib/openRouter";
 
 export async function createResume({ title }: { title: string }) {
     const { userId } = await auth();
@@ -155,7 +154,7 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
         updateData.experiences = {
             deleteMany: {},
             upsert: experiences.map(exp => {
-                const { id, resumeId, startDate, endDate, is_current, ...rest } = exp;
+                const { id, resumeId, startDate, endDate, isCurrent, ...rest } = exp;
                 return {
                     where: {
                         id: (exp).id || undefined,
@@ -164,13 +163,13 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
                         ...rest,
                         startDate: startDate,
                         endDate: endDate,
-                        isCurrent: is_current,
+                        isCurrent: isCurrent,
                     },
                     create: {
                         ...rest,
                         startDate: startDate,
                         endDate: endDate,
-                        isCurrent: is_current,
+                        isCurrent: isCurrent,
                     }
                 };
             })
@@ -346,7 +345,7 @@ export async function improveWithAI({
     const prompt = basePrompt;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await getGeneratedAIContent(prompt);
         return result.response.text().trim();
     } catch (error) {
         console.error("AI improve fail:", error);

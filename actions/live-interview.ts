@@ -3,12 +3,8 @@
 import { db } from "@/lib/prisma";
 import { IAssessment } from "@/types";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-});
+import { model } from "../lib/genai";
+import getGeneratedAIContent from "@/lib/openRouter";
 
 interface LiveQuizQuestion {
     question: string;
@@ -51,7 +47,7 @@ export async function generateLiveQuiz() {
   `;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await getGeneratedAIContent(prompt);
         const response = result.response;
         const text = response.text();
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
@@ -106,7 +102,7 @@ export async function saveLiveQuizResult(questions: LiveQuizQuestion[], answers:
     `;
 
         try {
-            const tipResult = await model.generateContent(improvementPrompt);
+            const tipResult = await getGeneratedAIContent(improvementPrompt);
 
             improvementTip = tipResult.response.text().trim();
         } catch (error) {
@@ -190,7 +186,7 @@ export async function generateLiveInterviewQuestions({ role, description, yoes }
   `;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await getGeneratedAIContent(prompt);
         const response = result.response;
         const text = response.text();
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();

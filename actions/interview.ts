@@ -3,14 +3,9 @@
 import { db } from "@/lib/prisma";
 import { IAssessment, ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { model } from "../lib/genai";
 import { Prisma } from "@prisma/client";
-
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({
-  model: 'gemini-2.0-flash',
-});
+import getGeneratedAIContent from "@/lib/openRouter";
 
 interface QuizQuestion {
   question: string;
@@ -54,7 +49,7 @@ export async function generateQuiz() {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeneratedAIContent(prompt);
     const response = result.response;
     const text = response.text();
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
@@ -110,7 +105,7 @@ export async function saveQuizResult(questions: QuizQuestion[], answers: string[
     `;
 
     try {
-      const tipResult = await model.generateContent(improvementPrompt);
+      const tipResult = await getGeneratedAIContent(improvementPrompt);
 
       improvementTip = tipResult.response.text().trim();
     } catch (error) {
@@ -190,7 +185,7 @@ export async function generateInterviewQuestions({ role, description, yoes }: { 
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeneratedAIContent(prompt);
     const response = result.response;
     const text = response.text();
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
@@ -316,7 +311,7 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
     }
   `;
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeneratedAIContent(prompt);
     const response = result.response;
     const text = response.text();
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();

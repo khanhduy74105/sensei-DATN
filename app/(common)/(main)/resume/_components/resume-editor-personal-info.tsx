@@ -11,7 +11,8 @@ import { IResumePersonalData, ITemplateData } from "../types";
 import Image from "next/image";
 import { uploadImage } from "@/actions/resume";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface IResumeEditorPersonalInfoProps {
   register: UseFormRegister<ITemplateData>;
@@ -215,6 +216,7 @@ const ResumeEditorPersonalInfo = ({
   formValues,
 }: IResumeEditorPersonalInfoProps) => {
   const [uploading, setUploading] = useState(false);
+  const [isImageHovered, setIsImageHovered] = useState(false);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -229,7 +231,11 @@ const ResumeEditorPersonalInfo = ({
     setUploading(false);
   };
 
-  console.log(formValues.personalInfo?.image);
+  // Remove image handler
+  const handleRemoveImage = () => {
+    setValue("personalInfo.image", "");
+    toast.info("Image removed");
+  };
 
   return (
     <div className="space-y-5">
@@ -244,15 +250,35 @@ const ResumeEditorPersonalInfo = ({
             <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
           </div>
         ) : (
-          <label className="cursor-pointer">
+          <label
+            className="cursor-pointer"
+            onMouseEnter={() => setIsImageHovered(true)}
+            onMouseLeave={() => setIsImageHovered(false)}
+          >
             {formValues.personalInfo?.image ? (
-              <Image
-                alt="avatar"
-                height={100}
-                width={100}
-                className="w-16 h-16 rounded-full object-cover ring ring-slate-300 hover:opacity-80"
-                src={formValues.personalInfo.image}
-              />
+              <div className="relative">
+                <Image
+                  alt="avatar"
+                  height={100}
+                  width={100}
+                  className="w-16 h-16 rounded-full object-cover ring ring-slate-300"
+                  src={formValues.personalInfo.image}
+                />
+                {isImageHovered && (
+                  <Button
+                    size={"icon"}
+                    type="button"
+                    className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 z-10 bg-white/80"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                  >
+                    <Trash className="text-red-500" />
+                  </Button>
+                )}
+              </div>
             ) : (
               <div className="w-16 h-16 rounded-full bg-gray-200 ring ring-slate-300" />
             )}
@@ -266,8 +292,10 @@ const ResumeEditorPersonalInfo = ({
           </label>
         )}
 
-        <div className="flex flex-col gap-1 pl-4 text-sm">
-          <p>Update resume image</p>
+        <div className="flex gap-1 pl-4 text-sm">
+          <p>
+            {!formValues.personalInfo?.image ? "Update" : "Remove"} resume image
+          </p>
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+import { title } from "process";
 import { z } from "zod";
 
 export const onboardingSchema = z.object({
@@ -47,11 +48,11 @@ export const entrySchema = z
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().optional(),
     description: z.string().min(1, "Description is required"),
-    is_current: z.boolean().default(false),
+    isCurrent: z.boolean().default(false),
   })
   .refine(
     (data) => {
-      if (!data.is_current && !data.endDate) {
+      if (!data.isCurrent && !data.endDate) {
         return false;
       }
       return true;
@@ -115,7 +116,7 @@ export const resumeEducationSchema = z.object({
  *  3. EXPERIENCE  (Union: current job or past job)
  * ---------------------------------------------------- */
 
-// Current job: has is_current, must NOT have endDate
+// Current job: has isCurrent, must NOT have endDate
 export const resumeExperienceCurrentSchema = z.object({
   id: z.string().optional(),
   resumeId: z.string().optional(),
@@ -123,11 +124,11 @@ export const resumeExperienceCurrentSchema = z.object({
   organization: z.string(),
   description: z.string(),
   startDate: z.string(),
-  is_current: z.boolean(),
+  isCurrent: z.boolean(),
   endDate: z.never().optional(),
 });
 
-// Past job: has endDate, must NOT have is_current
+// Past job: has endDate, must NOT have isCurrent
 export const resumeExperiencePastSchema = z.object({
   id: z.string().optional(),
   resumeId: z.string().optional(),
@@ -136,7 +137,7 @@ export const resumeExperiencePastSchema = z.object({
   description: z.string(),
   startDate: z.string(),
   endDate: z.string(),
-  is_current: z.never().optional(),
+  isCurrent: z.never().optional(),
 });
 
 export const resumeExperienceSchema = z.union([
@@ -161,6 +162,7 @@ export const resumeProjectSchema = z.object({
  * ---------------------------------------------------- */
 
 export const templateDataSchema = z.object({
+  title: z.string().optional(),
   personalInfo: resumePersonalDataSchema.optional(),
   professional_summary: z.string().optional(),
   experiences: z.array(resumeExperienceSchema).optional(),

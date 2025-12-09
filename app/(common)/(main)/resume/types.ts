@@ -34,7 +34,7 @@ export type IResumeExperience =
         organization: string;
         description: string;
         startDate: string;
-        is_current: boolean;
+        isCurrent: boolean;
         endDate?: never;
     }
     | {
@@ -45,7 +45,7 @@ export type IResumeExperience =
         description: string;
         startDate: string;
         endDate: string;
-        is_current?: never;
+        isCurrent?: never;
     };
 export interface IResumeProject {
     id?: string;
@@ -80,6 +80,7 @@ export interface ITemplateData {
     template?: string;
     accentColor?: string;
     isPublic?: boolean;
+    title?: string;
     personalInfo?: IResumePersonalData,
     professional_summary?: string
     experiences?: IResumeExperience[];

@@ -23,8 +23,7 @@ import useFetch from "@/hooks/use-fetch";
 
 const formatDisplayDate = (dateString: string | undefined) => {
   if (!dateString) return "";
-  const date = parse(dateString, "yyyy-MM", new Date());
-  return format(date, "MMM yyyy");
+  return dateString;
 };
 
 interface EntryFromProps {
@@ -50,18 +49,21 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
       startDate: "",
       endDate: "",
       description: "",
-      is_current: false,
+      isCurrent: false,
     },
   });
 
-  const current = watch("is_current");
+  console.log('entries', entries);
+  
+
+  const current = watch("isCurrent");
 
   const handleAdd = handleValidation((data) => {
     const formattedEntry = {
       id: crypto.randomUUID(),
       ...data,
       startDate: formatDisplayDate(data.startDate),
-      endDate: data.is_current ? "" : formatDisplayDate(data.endDate),
+      endDate: data.isCurrent ? "" : formatDisplayDate(data.endDate),
     };
 
     onChange([...entries, formattedEntry]);
@@ -126,9 +128,9 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                {item.is_current
-                  ? `${item.startDate} - Present`
-                  : `${item.startDate} - ${item.endDate}`}
+                {item.isCurrent
+                  ? `${formatDisplayDate(item.startDate)} - Present`
+                  : `${formatDisplayDate(item.startDate)} - ${formatDisplayDate(item.endDate)}`}
               </p>
               <p className="mt-2 text-sm whitespace-pre-wrap">
                 {item.description}
@@ -190,10 +192,10 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
-                id="is_current"
-                {...register("is_current")}
+                id="isCurrent"
+                {...register("isCurrent")}
                 onChange={(e) => {
-                  setValue("is_current", e.target.checked);
+                  setValue("isCurrent", e.target.checked);
                   if (e.target.checked) {
                     setValue("endDate", "");
                   }

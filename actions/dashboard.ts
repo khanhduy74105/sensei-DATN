@@ -2,8 +2,9 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { model } from "../lib/genai";
 import { Prisma } from "@prisma/client";
+import getGeneratedAIContent from "@/lib/openRouter";
 type IndustryInsightCore = Pick<Prisma.IndustryInsightCreateInput,
   | "salaryRanges"
   | "growthRate"
@@ -14,10 +15,7 @@ type IndustryInsightCore = Pick<Prisma.IndustryInsightCreateInput,
   | "recommendedSkills"
 >;
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({
-  model: 'gemini-2.0-flash',
-});
+// model is now imported from lib/genai
 
 export const genarateAIIsignts = async (
   industry: string
@@ -42,7 +40,7 @@ export const genarateAIIsignts = async (
     Include at least 5 skills and trends.
   `;
 
-  const result = await model.generateContent(prompt);
+  const result = await getGeneratedAIContent(prompt);
   const response = result.response;
   const text = response.text();
   const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
