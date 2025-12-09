@@ -1,15 +1,10 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import getGeneratedAIContent from "../openRouter";
 import { db } from "../prisma";
 import { inngest } from "./client";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-});
-
 export const generateIndustryInsight = inngest.createFunction(
     { name: "Generate Industry Insight", id: "generate/industry-insight" },
-    { cron: "0 0 * * 0" },
+    { cron: "*/1 * * * *" },
     async ({ event, step }) => {
         const industries = await step.run("Fetch Industries", async () => {
             return await db.industryInsight.findMany({
@@ -39,12 +34,13 @@ export const generateIndustryInsight = inngest.createFunction(
                 Include at least 5 skills and trends.
             `;
 
-            const result = await step.ai.wrap("gemini", async (p) => {
-                return await model.generateContent(p);
+            const result = await step.ai.wrap("openrouter-ai", async (p) => {
+                const response = await getGeneratedAIContent(p);
+                
+                return response.response.text() || "";
             }, prompt);
-            const { text } = result.response.candidates![0].content.parts[0] as {text: string} || { text: ""};
-            const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
+            const cleanedText = result.replace(/```(?:json)?\n?/g, "").trim();
             const insights = JSON.parse(cleanedText);
 
             await step.run("Update Insight", async () => {
