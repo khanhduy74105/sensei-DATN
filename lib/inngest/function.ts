@@ -4,7 +4,7 @@ import { inngest } from "./client";
 
 export const generateIndustryInsight = inngest.createFunction(
     { name: "Generate Industry Insight", id: "generate/industry-insight" },
-    { cron: "*/1 * * * *" },
+    { cron: "0 0 * * 0" },
     async ({ event, step }) => {
         const industries = await step.run("Fetch Industries", async () => {
             return await db.industryInsight.findMany({
