@@ -56,7 +56,7 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
                 </Button>
               </CardHeader>
               <CardContent>
-                <p className="mt-2 text-sm whitespace-pre-wrap">
+                <p className="mt-2 text-sm whitespace-pre-wrap text-ellipsis overflow-hidden">
                   {item.description}
                 </p>
               </CardContent>

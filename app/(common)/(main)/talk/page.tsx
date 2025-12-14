@@ -4,6 +4,7 @@ import MockedInterviews from "./_components/mocked-interview";
 
 export default async function TalkPage() {
   const mockedInterviews = await getLiveMockInterviews();
+  
   return (
     <div className="container mx-auto py-6">
       <div>

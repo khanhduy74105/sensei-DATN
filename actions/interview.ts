@@ -3,7 +3,6 @@
 import { db } from "@/lib/prisma";
 import { IAssessment, ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { auth } from "@clerk/nextjs/server";
-import { model } from "../lib/genai";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
 
@@ -14,7 +13,7 @@ interface QuizQuestion {
   explanation: string;
 }
 
-export async function generateQuiz() {
+export async function generateQuiz(entry?: { role: string; skills: string[] }) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -28,10 +27,12 @@ export async function generateQuiz() {
 
   if (!user) throw new Error("User not found");
 
-  const prompt = `
-    Generate 10 technical interview questions for a ${user.industry
-    } professional${user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
-    }.
+  let prompt = entry ?
+    `Generate 10 technical interview questions for a ${entry.role} professional ${entry.skills?.length ? ` with expertise in ${entry.skills.join(", ")}` : ""}`
+    : `Generate 10 technical interview questions for a ${user.industry
+    } professional${user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""}.`
+
+  prompt += `
     
     Each question should be multiple choice with 4 options.
     
@@ -370,7 +371,7 @@ export async function getLiveMockInterviews() {
         createdAt: mockInterview.createdAt,
         updatedAt: mockInterview.updatedAt,
       }
-    )) as ILiveMockInterview[];
+      )) as ILiveMockInterview[];
   } catch (error) {
     console.error("Error fetching mock interviews:", error);
     throw new Error("Failed to fetch mock interviews");

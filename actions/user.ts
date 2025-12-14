@@ -92,3 +92,24 @@ export async function getUserOnboardingStatus() {
         throw new Error('Failed to check onboarding status');
     }
 }
+
+export async function getUser() {
+     const { userId } = await auth();
+    if (!userId) throw new Error('User not authenticated');
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId }
+    });
+    if (!user) throw new Error('User not found');
+
+    try {
+        const user = await db.user.findUnique({
+            where: { clerkUserId: userId },
+        });
+
+        return user
+    } catch (error) {
+        console.error('Error checking user:', error);
+        throw new Error('Failed to check user');
+    }
+}

@@ -106,7 +106,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
                     </div>
                   </div>
                   {exp.description && (
-                    <div className="text-gray-700 leading-relaxed mt-3 whitespace-pre-line">
+                    <div className="text-gray-700 leading-relaxed mt-3 whitespace-pre-line overflow-ellipsis overflow-hidden">
                       {exp.description}
                     </div>
                   )}
@@ -138,7 +138,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
                     </div>
                   </div>
                   {p.description && (
-                    <div className="text-gray-700 leading-relaxed text-sm mt-3">
+                    <div className="text-gray-700 leading-relaxed text-sm mt-3 overflow-ellipsis overflow-hidden">
                       {p.description}
                     </div>
                   )}

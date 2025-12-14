@@ -73,7 +73,7 @@ export default function ResumeBuilderDetailPage({
     resolver: zodResolver(templateDataSchema),
     defaultValues: {
       ...initialData,
-      title: initialData.title || '',
+      title: initialData.title || "",
       isPublic: initialData.isPublic || false,
       accentColor: initialData.accentColor || "blue",
       template: initialData.template || "classic",
@@ -156,6 +156,36 @@ export default function ResumeBuilderDetailPage({
     window.print();
   };
 
+  let previewContent = <></>;
+
+  switch (templateType) {
+    case "classic":
+      previewContent = (
+        <ClassicTemplate data={formValues} accentColor={accentColor} />
+      );
+      break;
+    case "modern":
+      previewContent = (
+        <ModernTemplate data={formValues} accentColor={accentColor} />
+      );
+      break;
+    case "minimal_image":
+      previewContent = (
+        <MinimalImageTemplate data={formValues} accentColor={accentColor} />
+      );
+      break;
+    case "minimal":
+      previewContent = (
+        <MinimalTemplate data={formValues} accentColor={accentColor} />
+      );
+      break;
+    default:
+      previewContent = (
+        <ClassicTemplate data={formValues} accentColor={accentColor} />
+      );
+
+      break;
+  }
   return (
     <div>
       <div id="resume-actions" className="flex justify-between items-center">
@@ -205,7 +235,7 @@ export default function ResumeBuilderDetailPage({
             <Input
               value={formValues.title}
               onChange={(e) => {
-                setValue('title', e.target.value)
+                setValue("title", e.target.value);
               }}
               className="text-lg"
             />
@@ -217,7 +247,9 @@ export default function ResumeBuilderDetailPage({
               }}
               disabled={loading || !formValues.title?.trim()}
             >
-              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              {loading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
               Save
             </Button>
             <Button
@@ -290,18 +322,7 @@ export default function ResumeBuilderDetailPage({
         </div>
 
         <div id="resume-review" className=" flex-1 min-w-[400px]">
-          {templateType === "classic" ? (
-            <ClassicTemplate data={formValues} accentColor={accentColor} />
-          ) : null}
-          {templateType === "modern" ? (
-            <ModernTemplate data={formValues} accentColor={accentColor} />
-          ) : null}
-          {templateType === "minimal_image" ? (
-            <MinimalImageTemplate data={formValues} accentColor={accentColor} />
-          ) : null}
-          {templateType === "minimal" ? (
-            <MinimalTemplate data={formValues} accentColor={accentColor} />
-          ) : null}
+          {previewContent}
         </div>
       </div>
     </div>

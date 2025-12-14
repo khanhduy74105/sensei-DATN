@@ -16,6 +16,7 @@ import React, { useEffect, useState } from "react";
 import { BarLoader } from "react-spinners";
 import { toast } from "sonner";
 import QuizResult from "./quiz-result";
+import { AddNewTrigger } from "./add-new-trigger-quiz";
 
 const Quiz = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -114,9 +115,12 @@ const Quiz = () => {
           </p>
         </CardContent>
         <CardFooter>
-          <Button onClick={generateQuizFn} className="w-full">
+          <Button onClick={() => {
+            generateQuizFn()
+          }} className="w-1/2">
             Start Quiz
           </Button>
+          <AddNewTrigger onClick={generateQuizFn}/>
         </CardFooter>
       </Card>
     );

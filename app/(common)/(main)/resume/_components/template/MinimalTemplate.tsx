@@ -61,7 +61,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
                 </div>
                 <p className="text-gray-600 mb-2">{exp.organization}</p>
                 {exp.description && (
-                  <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line overflow-ellipsis overflow-hidden">
                     {exp.description}
                   </div>
                 )}
@@ -85,10 +85,10 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
             {data.projects.map((proj, index) => (
               <div
                 key={index}
-                className="flex flex-col gap-2 justify-between items-baseline"
+                className="max-w-full flex flex-col gap-2 justify-between items-baseline"
               >
                 <h3 className="text-lg font-medium ">{proj.name}</h3>
-                <p className="text-gray-600">{proj.description}</p>
+                <p className="text-gray-600 max-w-full text-ellipsis overflow-hidden">{proj.description}</p>
               </div>
             ))}
           </div>

@@ -176,7 +176,7 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
                       {exp.organization}
                     </p>
                     {exp.description && (
-                      <ul className="list-disc list-inside text-sm text-zinc-700 leading-relaxed space-y-1">
+                      <ul className="text-sm text-zinc-700 leading-relaxed space-y-1 overflow-ellipsis overflow-hidden">
                         {exp.description.split("\n").map((line, i) => (
                           <li key={i}>{line}</li>
                         ))}
@@ -207,7 +207,7 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
                       {project.type}
                     </p>
                     {project.description && (
-                      <ul className="list-disc list-inside text-sm text-zinc-700  space-y-1">
+                      <ul className="text-sm text-zinc-700  space-y-1 overflow-ellipsis overflow-hidden">
                         {project.description.split("\n").map((line, i) => (
                           <li key={i}>{line}</li>
                         ))}

@@ -28,6 +28,7 @@ import {
 } from "@/actions/interview";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+
 export const AddNewTrigger = () => {
   const router = useRouter();
   const [open, setOpen] = useState(false);

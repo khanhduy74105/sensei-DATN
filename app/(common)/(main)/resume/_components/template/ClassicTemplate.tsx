@@ -76,7 +76,7 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
                                     </div>
                                 </div>
                                 {exp.description && (
-                                    <div className="text-gray-700 leading-relaxed whitespace-line">
+                                    <div className="text-gray-700 leading-relaxed whitespace-pre-line overflow-ellipsis overflow-hidden">
                                         {exp.description}
                                     </div>
                                 )}
@@ -96,9 +96,9 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
                     <ul className="space-y-3 ">
                         {data.projects.map((proj, index) => (
                             <div key={index} className="flex justify-between items-start border-l-3 border-gray-300 pl-6">
-                                <div>
+                                <div className="max-w-full">
                                     <li className="font-semibold text-gray-800 ">{proj.name}</li>
-                                    <p className="text-gray-600">{proj.description}</p>
+                                    <p className="text-gray-600 max-w-full text-ellipsis overflow-hidden">{proj.description}</p>
                                 </div>
                             </div>
                         ))}

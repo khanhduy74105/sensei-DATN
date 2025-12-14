@@ -2,11 +2,10 @@
 import { IResumeContent } from "@/app/(common)/(main)/resume/types";
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { model } from "../lib/genai";
 import { revalidatePath } from "next/cache";
 import getGeneratedAIContent from "@/lib/openRouter";
 
-export async function createResume({ title }: { title: string }) {
+export async function createResume(data: Partial<IResumeContent> & { title: string }) {
     const { userId } = await auth();
     if (!userId) throw new Error('User not authenticated');
 
@@ -16,13 +15,93 @@ export async function createResume({ title }: { title: string }) {
     if (!user) throw new Error('User not found');
 
     try {
+        // Prepare create object for main Resume
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const createData: any = {
+            userId: user.id,
+            title: data.title,
+            content: data.content || "",
+            atsScore: data.atsScore,
+            accentColor: data.accentColor,
+            template: data.template,
+            json: data.json,
+            feedback: data.feedback,
+            skills: data.skills,
+            professional_summary: data.professional_summary
+        };
+
+        // 1. Personal Info (create if exists)
+        if (data.personalInfo) {
+            const { id, resumeId, fullName, email, phone, profession, linkedin, location, website } = data.personalInfo;
+            createData.personalInfo = {
+                create: {
+                    fullName: fullName || '',
+                    email: email || '',
+                    phone: phone || '',
+                    profession: profession || '',
+                    linkedin: linkedin || '',
+                    location: location || '',
+                    website: website || ''
+                }
+            };
+        }
+
+        // 2. Experiences (create many if exists)
+        if (data.experiences && Array.isArray(data.experiences)) {
+            createData.experiences = {
+                create: data.experiences.map(exp => {
+                    const { id, resumeId, title, organization, startDate, endDate, isCurrent, description } = exp;
+                    return {
+                        title: title || '',
+                        organization: organization || '',
+                        startDate: startDate || '',
+                        endDate: endDate || '',
+                        isCurrent: typeof isCurrent === 'boolean' ? isCurrent : false,
+                        description: description || ''
+                    };
+                })
+            };
+        }
+
+        // 3. Educations (create many if exists)
+        if (data.educations && Array.isArray(data.educations)) {
+            createData.educations = {
+                create: data.educations.map(edu => {
+                    const { id, resumeId, degree, institution, field, graduationDate, gpa } = edu;
+                    return {
+                        degree: degree || '',
+                        institution: institution || '',
+                        field: field || '',
+                        graduationDate: graduationDate || '',
+                        gpa: gpa || ''
+                    };
+                })
+            };
+        }
+
+        // 4. Projects (create many if exists)
+        if (data.projects && Array.isArray(data.projects)) {
+            createData.projects = {
+                create: data.projects.map(proj => {
+                    const { id, resumeId, name, description, type } = proj;
+                    return {
+                        name: name || '',
+                        description: description || '',
+                        type: type || ''
+                    };
+                })
+            };
+        }
+
         const resume = await db.resume.create({
-            data: {
-                userId: user.id,
-                title,
-                content: ""
+            data: createData,
+            include: {
+                personalInfo: true,
+                experiences: true,
+                educations: true,
+                projects: true,
             }
-        })
+        });
         return resume;
     } catch (error) {
         if (error instanceof Error) {
@@ -30,7 +109,6 @@ export async function createResume({ title }: { title: string }) {
             throw new Error("Failed to save resume")
         }
     }
-
 }
 
 export async function getAllResumes() {
@@ -81,7 +159,7 @@ export async function getResumeById(id: string) {
     return resume as IResumeContent | null;
 }
 
-export async function getResumePublicById (id: string) {
+export async function getResumePublicById(id: string) {
     const { userId } = await auth();
     const resume = await db.resume.findUnique({
         where: {
@@ -350,5 +428,136 @@ export async function improveWithAI({
     } catch (error) {
         console.error("AI improve fail:", error);
         throw new Error("Failed to improve content");
+    }
+}
+
+export async function convertExtractedTextToResumeData(resumeExtractedText: string) {
+    try {
+        const RESUME_PARSING_PROMPT = `
+        You are an expert resume parser. Extract and structure information from the provided resume text into a JSON format.
+
+        **Instructions:**
+        1. Carefully read the entire resume text
+        2. Extract all relevant information
+        3. Structure the data according to the schema below
+        4. Use null for missing fields
+        5. Ensure dates are in ISO 8601 format (YYYY-MM-DD)
+        6. For ongoing positions, set isCurrent: true and endDate: null
+
+        **Output Schema:**
+        {
+        "personalInfo": {
+            "fullName": string,
+            "email": string,
+            "phone": string,
+            "profession": string | null,
+            "linkedin": string | null,
+            "location": string | null,
+            "website": string | null
+        },
+        "professional_summary": string | null,
+        "experiences": [
+            {
+            "title": string,
+            "organization": string,
+            "startDate": string (YYYY-MM-DD),
+            "endDate": string (YYYY-MM-DD) | null,
+            "isCurrent": boolean, (if endDate null)
+            "description": string
+            }
+        ],
+        "educations": [
+            {
+            "degree": string,
+            "institution": string,
+            "field": string | null,
+            "graduationDate": string (YYYY-MM-DD) | null,
+            "gpa": string | null,
+            }
+        ],
+        "projects": [
+            {
+            "name": string,
+            "description": string,
+            "type": string
+            }
+        ],
+        "skills": string[]
+        }
+
+        **Parsing Guidelines:**
+
+        **Personal Information:**
+        - Extract name, email, phone from header/contact section
+        - Look for LinkedIn, GitHub, portfolio URLs
+        - Extract physical address if present
+
+        **Professional Summary:**
+        - Usually at the top after contact info
+        - May be labeled as "Summary", "Profile", "Objective", or "About Me"
+        - Combine multiple paragraphs into one string
+
+        **Experiences:**
+        - List all work experiences in chronological order (most recent first)
+        - Extract job title, company name, location, dates
+        - If the position says "Present", "Current", or similar, set isCurrent: true
+        - Combine bullet points into description field
+        - Extract key achievements separately if clear
+
+        **Education:**
+        - Include degree name (Bachelor's, Master's, etc.)
+        - Extract institution name, major/field of study
+        - Parse graduation date or expected graduation
+        - Include GPA if mentioned
+
+        **Projects:**
+        - Look for "Projects", "Personal Projects", or "Portfolio" section
+        - Extract project name and description
+        - Identify technologies/tools used
+        - Find GitHub or demo links if present
+
+        **Skills:**
+        - Extract from "Skills", "Technical Skills", "Core Competencies" section
+        - Return as array of individual skills
+        - Include programming languages, frameworks, tools, soft skills
+        - Separate combined skills (e.g., "React/Next.js" → ["React", "Next.js"])
+
+        **Date Parsing Rules:**
+        - Convert formats like "Jan 2023", "January 2023" to "2023-01-01"
+        - "2023 - Present" → startDate: "2023-01-01", endDate: null, isCurrent: true
+        - "2020 - 2023" → startDate: "2020-01-01", endDate: "2023-12-31"
+        - If only year is given, use January 1st or December 31st appropriately
+
+        **Important:**
+        - Return ONLY valid JSON, no additional text or explanation
+        - Use null for missing optional fields
+        - Ensure all strings are properly escaped
+        - Keep descriptions concise but informative
+        - Preserve original wording when possible
+
+        **Resume Text to Parse:**
+        ${resumeExtractedText}
+
+        **Output JSON:**
+        `;
+
+        const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT);
+        const response = result.response;
+        const text = response.text();
+        const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+        const parsedResume = JSON.parse(cleanedText)
+        console.log('parsedResume', parsedResume);
+        const { userId } = await auth();
+        if (!userId) throw new Error('User not authenticated');
+
+        const user = await db.user.findUnique({
+            where: { clerkUserId: userId }
+        });
+        if (!user) throw new Error('User not found');
+
+        const createdResume = await createResume(parsedResume)
+        return createdResume;
+    } catch (error) {
+        console.log('Error when convert extracted resume to formated data', error)
     }
 }

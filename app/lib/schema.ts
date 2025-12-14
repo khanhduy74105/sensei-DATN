@@ -78,6 +78,19 @@ export const coverLetterSchema = z.object({
   jobDescription: z.string().min(1, "Job description is required"),
 });
 
+export const quizInterviewSchema = z.object({
+  role: z.string().min(1, "Job role/position is required"),
+  skills: z.string().transform((val) =>
+    val
+      ? val
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean)
+      : []
+  )
+});
+
+
 export const liveMockInterviewSchema = z.object({
   role: z.string().min(1, "Job role/position is required"),
   description: z.string().min(1, "Job description is required"),
