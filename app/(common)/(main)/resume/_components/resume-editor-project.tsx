@@ -1,11 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { IResumeEditorContentProps } from "./resume-editor-content";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { X, PlusCircle } from "lucide-react";
+import { X, PlusCircle, Pencil } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resumeProjectSchema } from "@/app/lib/schema";
 
@@ -27,10 +33,16 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
   });
 
   const currentValue = watch();
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const handleDelete = (index: number) => {
     const newEntries = props.formValues.projects?.filter((_, i) => i !== index);
     props.setValue("projects", newEntries || []);
+  };
+
+  const handleEdit = (index: number) => {
+    setEditingIndex(index);
+    reset(props.formValues.projects?.[index]);
   };
 
   return (
@@ -44,16 +56,29 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
                   <CardTitle className="text-sm font-medium">
                     {item.name}
                   </CardTitle>
-                  <span className="text-sm font-normal text-neutral-300">{item.type}</span>
+                  <span className="text-sm font-normal text-neutral-300">
+                    {item.type}
+                  </span>
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  type="button"
-                  onClick={() => handleDelete(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    type="button"
+                    onClick={() => handleEdit(index)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    type="button"
+                    onClick={() => handleDelete(index)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <p className="mt-2 text-sm whitespace-pre-wrap text-ellipsis overflow-hidden">
@@ -71,22 +96,37 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Input placeholder="Project Name" {...register("name", { required: "Project name is required" })} />
+                <Input
+                  placeholder="Project Name"
+                  {...register("name", {
+                    required: "Project name is required",
+                  })}
+                />
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name.message}</p>
                 )}
               </div>
               <div className="space-y-2">
-                <Input placeholder="Type" {...register("type", { required: "Type is required" })} />
+                <Input
+                  placeholder="Type"
+                  {...register("type", { required: "Type is required" })}
+                />
                 {errors.type && (
                   <p className="text-sm text-red-500">{errors.type.message}</p>
                 )}
               </div>
             </div>
             <div className="space-y-2">
-              <Textarea placeholder="Description" {...register("description", { required: "Description is required" })} />
+              <Textarea
+                placeholder="Description"
+                {...register("description", {
+                  required: "Description is required",
+                })}
+              />
               {errors.description && (
-                <p className="text-sm text-red-500">{errors.description.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.description.message}
+                </p>
               )}
             </div>
           </CardContent>
@@ -107,7 +147,7 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
                   ...(props.formValues.projects || []),
                   {
                     id: crypto.randomUUID(),
-                    ...currentValue
+                    ...currentValue,
                   },
                 ]);
                 reset();

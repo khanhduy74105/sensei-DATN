@@ -1,5 +1,5 @@
 "use server"
-import { IResumeContent } from "@/app/(common)/(main)/resume/types";
+import { IResumeContent, ITemplateData, ResumeJDAnalysisResult } from "@/app/(common)/(main)/resume/types";
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -546,7 +546,6 @@ export async function convertExtractedTextToResumeData(resumeExtractedText: stri
         const text = response.text();
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
         const parsedResume = JSON.parse(cleanedText)
-        console.log('parsedResume', parsedResume);
         const { userId } = await auth();
         if (!userId) throw new Error('User not authenticated');
 
@@ -559,5 +558,159 @@ export async function convertExtractedTextToResumeData(resumeExtractedText: stri
         return createdResume;
     } catch (error) {
         console.log('Error when convert extracted resume to formated data', error)
+    }
+}
+
+export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
+    try {
+        const prompt = `
+        You are an expert Applicant Tracking System (ATS) and senior technical recruiter.
+
+        Your task is to analyze how well a candidate’s resume matches a job description
+        and propose improvements WITHOUT altering the resume automatically.
+
+        RULES:
+        - Do NOT fabricate skills, experience, education, or achievements.
+        - Do NOT assume missing information.
+        - Resume JSON is the single source of truth.
+        - Job Description text may be unstructured or messy.
+        - Only suggest improvements when there is a clear benefit.
+        - Suggestions must be realistic and aligned with the Job Description.
+        - Output MUST be valid JSON and match the schema EXACTLY.
+        - If a resume field is already strong, DO NOT suggest changes for that field.
+
+            Analyze the match between the following Job Description and Candidate Resume.
+
+        ========================
+        JOB DESCRIPTION
+        ========================
+        """
+        ${jd}
+        """
+
+        ========================
+        CANDIDATE RESUME (STRUCTURED JSON)
+        ========================
+        {
+            professional_summary: ${resume.professional_summary},
+            experiences: ${JSON.stringify(resume.experiences)},
+            educations: ${JSON.stringify(resume.educations)},
+            projects: ${JSON.stringify(resume.projects)},
+            skills: ${JSON.stringify(resume.skills)},
+        }
+
+        ========================
+        TASKS
+        ========================
+        1. Evaluate how well the resume matches the Job Description.
+        2. Identify missing required and nice-to-have skills.
+        3. Identify missing or weak experience areas.
+        4. Provide a match score (0–100) and a final verdict.
+        5. Suggest general improvements to increase matching.
+        6. If applicable, propose field-level improvements for:
+        - professional_summary
+        - experiences
+        - educations
+        - projects
+        - skills
+
+        IMPORTANT:
+        - Field-level suggestions must include:
+        - current content
+        - suggested improved content
+        - a clear reason
+        - improved content should be match JD
+        - Use array index to reference specific experience, education, or project items.
+        - If no improvement is needed for a field, omit that field from the response.
+        - Do NOT rewrite the entire resume.
+        - The candidate must be able to apply suggestions selectively.
+
+        ========================
+        OUTPUT FORMAT
+        ========================
+        Return a single JSON object following this exact schema:
+
+        {
+            matchAnalysis: {
+                overallScore: number; // 0–100
+                verdict: "strong_match" | "moderate_match" | "weak_match";
+
+                missingSkills: {
+                    required: string[];
+                    niceToHave: string[];
+                };
+
+                missingExperience: string[];
+
+                notes: string;
+            };
+
+            generalSuggestions: string[];
+
+            fieldSuggestions: {
+                professional_summary?: {
+                    current: string;
+                    suggested: string;
+                    reason: string;
+                };
+
+                experiences?: Array<{
+                    index: number;
+                    suggested: {
+                        id?: string;
+                        resumeId?: string;
+                        title: string;
+                        organization: string;
+                        description: string;
+                        startDate: string;
+                        isCurrent: boolean;
+                        endDate?: never;
+                    };
+                    reason: string;
+                }>;
+
+                educations?: Array<{
+                    index: number;
+                    suggested: {
+                        id?: string;
+                        resumeId?: string;
+                        graduationDate: string;
+                        institution: string;
+                        degree: string;
+                        field: string;
+                        gpa?: string;
+                    };
+                    reason: string;
+                }>;
+
+                projects?: Array<{
+                    index: number;
+                    suggested: {
+                        id?: string;
+                        resumeId?: string;
+                        name: string;
+                        description: string;
+                        type: string;
+                    };
+                    reason: string;
+                }>;
+
+                // skills should only keywords
+                skills?: {
+                    current: string[];
+                    suggested: string[]; // should remove skills which is unnecessary and add required skills
+                    reason: string;
+                };
+            };
+        `
+
+        const result = await getGeneratedAIContent(prompt);
+        const response = result.response;
+        const text = response.text();
+        const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+        const parsedData = JSON.parse(cleanedText)
+        return parsedData as ResumeJDAnalysisResult;
+    } catch (error) {
+        console.log('Error when analizeMatchingResume', error);
     }
 }

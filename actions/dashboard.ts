@@ -2,7 +2,6 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { model } from "../lib/genai";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
 type IndustryInsightCore = Pick<Prisma.IndustryInsightCreateInput,

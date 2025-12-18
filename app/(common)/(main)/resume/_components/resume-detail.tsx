@@ -9,6 +9,7 @@ import {
   EyeOff,
   Link,
   Loader2,
+  StarsIcon,
 } from "lucide-react";
 import React, { useState } from "react";
 import ResumeEditorHeader from "./resume-editor-header";
@@ -17,6 +18,7 @@ import {
   IResumeContent,
   ITemplateData,
   KeyOfITemplateData,
+  ResumeJDAnalysisResult,
   TemplateTypes,
 } from "../types";
 import { Progress } from "@/components/ui/progress";
@@ -30,11 +32,15 @@ import ModernTemplate from "./template/ModernTemplate";
 import MinimalTemplate from "./template/MinimalTemplate";
 import { toast } from "sonner";
 import {
+  analyzeMatchingResume,
   toggleResumePublicStatus,
   updateResumeContent,
 } from "@/actions/resume";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import ResumeEnhance from "./resume-enhance";
+import useFetch from "@/hooks/use-fetch";
+import { SuggestionStatus } from "./field-suggestion";
 
 const stepOrder: KeyOfITemplateData[] = [
   KeyOfITemplateData.personalInfo,
@@ -90,8 +96,13 @@ export default function ResumeBuilderDetailPage({
   const onSubmit = async (data: Partial<IResumeContent>) => {
     setLoading(true);
 
+    console.log("data update resume", {
+      ...initialData,
+      ...data,
+    });
+
     try {
-      const updatedResume = await updateResumeContent(initialData.id, {
+      await updateResumeContent(initialData.id, {
         ...initialData,
         ...data,
       });
@@ -99,7 +110,6 @@ export default function ResumeBuilderDetailPage({
     } catch (error) {
       if (error instanceof Error) {
         console.log(error);
-
         toast.error(error.message || "Failed to generate cover letter");
       }
     }
@@ -154,6 +164,67 @@ export default function ResumeBuilderDetailPage({
   };
   const onDownload = () => {
     window.print();
+  };
+
+  const {
+    loading: analyzing,
+    fn: analyMatchingResume,
+    data: analyedMatchingResume,
+  } = useFetch(analyzeMatchingResume);
+
+  const onApplyEnhance = (
+    appliedContents: Record<string, SuggestionStatus>
+  ) => {
+    console.log('on apply change', appliedContents);
+    
+    Object.keys(appliedContents).forEach((key) => {
+      switch (key) {
+        case "summary":
+          setValue(
+            "professional_summary",
+            analyedMatchingResume.fieldSuggestions.professional_summary
+              .suggested
+          );
+          break;
+        case "skills":
+          setValue("skills", analyedMatchingResume.fieldSuggestions.skills.suggested);
+          break;
+        default:
+          if (key.startsWith("exp")) {
+            const [_, idx] = key.split("-");
+            const newExperiencies = formValues.experiences ?? [];
+            const index = parseInt(idx);
+            newExperiencies[index] = {
+              ...newExperiencies[index],
+              ...analyedMatchingResume.fieldSuggestions.experiences?.[index]
+                ?.suggested,
+            };
+            setValue("experiences", newExperiencies);
+          } else if (key.startsWith("edu")) {
+            const [_, idx] = key.split("-");
+            const newEdus = formValues.educations ?? [];
+            const index = parseInt(idx);
+            newEdus[index] = {
+              ...newEdus[index],
+              ...analyedMatchingResume.fieldSuggestions.educations?.[index]
+                ?.suggested,
+            };
+
+            setValue("educations", newEdus);
+          } else if (key.startsWith("project")) {
+            const [_, idx] = key.split("-");
+            const newProjects = formValues.projects ?? [];
+            const index = parseInt(idx);
+            newProjects[index] = {
+              ...newProjects[index],
+              ...analyedMatchingResume.fieldSuggestions.projects?.[index]
+                ?.suggested,
+            };
+            setValue("projects", newProjects);
+          }
+          break;
+      }
+    });
   };
 
   let previewContent = <></>;
@@ -229,51 +300,68 @@ export default function ResumeBuilderDetailPage({
         </div>
       </div>
 
-      <div id="resume-title" className="mt-4 max-w-1/2">
-        {isEditingTitle ? (
-          <div className="flex items-center gap-2">
-            <Input
-              value={formValues.title}
-              onChange={(e) => {
-                setValue("title", e.target.value);
-              }}
-              className="text-lg"
-            />
-            <Button
-              size={"sm"}
-              onClick={async () => {
-                await onSubmit(formValues);
-                setIsEditingTitle(false);
-              }}
-              disabled={loading || !formValues.title?.trim()}
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : null}
-              Save
-            </Button>
-            <Button
-              size={"sm"}
-              variant="ghost"
-              onClick={() => {
-                setIsEditingTitle(false);
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="text-m"> {formValues.title} </span>
-            <Button
-              size={"icon"}
-              variant="ghost"
-              onClick={() => setIsEditingTitle(true)}
-            >
-              <Edit />
-            </Button>
-          </div>
-        )}
+      <div
+        id="resume-title"
+        className="mt-4 max-w-full flex items-center justify-between"
+      >
+        <div className=" flex-1">
+          {isEditingTitle ? (
+            <div className="flex items-center gap-2">
+              <Input
+                value={formValues.title}
+                onChange={(e) => {
+                  setValue("title", e.target.value);
+                }}
+                className="text-lg"
+              />
+              <Button
+                size={"sm"}
+                onClick={async () => {
+                  await onSubmit(formValues);
+                  setIsEditingTitle(false);
+                }}
+                disabled={loading || !formValues.title?.trim()}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : null}
+                Save
+              </Button>
+              <Button
+                size={"sm"}
+                variant="ghost"
+                onClick={() => {
+                  setIsEditingTitle(false);
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-m"> {formValues.title} </span>
+              <Button
+                size={"icon"}
+                variant="ghost"
+                onClick={() => setIsEditingTitle(true)}
+              >
+                <Edit />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 flex items-center justify-end">
+          <ResumeEnhance
+            onSubmit={async (jd: string) => {
+              analyMatchingResume(jd, formValues);
+            }}
+            onApplyEnhance={onApplyEnhance}
+            currentEnhanced={analyedMatchingResume}
+            currentResume={formValues}
+            loading={analyzing}
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap w-full mt-6 gap-4">

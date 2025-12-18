@@ -16,7 +16,6 @@ import {
 import { Upload, FileText, X, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState, useRef } from "react";
-import pdfToText from "react-pdftotext";
 
 const UploadResumeTrigger = () => {
   const [open, setOpen] = useState(false);
@@ -40,6 +39,7 @@ const UploadResumeTrigger = () => {
     setIsProcessing(true);
 
     try {
+      const { default: pdfToText } = await import("react-pdftotext");
       const text = await pdfToText(selectedFile);
       setExtractedText(text.trim());
     } catch (error) {

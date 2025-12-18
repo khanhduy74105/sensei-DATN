@@ -12,17 +12,15 @@ const InterviewedCard = ({
 }) => {
   const router = useRouter();
   return (
-    <div className="basis-1/3 p-2">
+    <div className="w-1/3 p-2">
       <Card>
         <CardHeader className="flex flex-col items-start gap-2">
           <CardTitle className="text-xl font-bold">
             {interviewData.role}
           </CardTitle>
-          <CardTitle className="text-m font-medium">
-            {interviewData.description}
-          </CardTitle>
+        
           <CardTitle className="text-sm font-medium text-gray-500">
-            {interviewData.createdAt.toDateString()}
+            Last tried: {interviewData.createdAt.toDateString()}
           </CardTitle>
         </CardHeader>
         <CardContent>

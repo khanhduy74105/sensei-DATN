@@ -143,3 +143,76 @@ export const TEMPLATE_TYPE_OPTIONS: {
             des: "Ultra-clean design that puts your content front and center."
         }
     ];
+
+export type ResumeJDAnalysisResult = {
+    matchAnalysis: {
+        overallScore: number; // 0–100
+        verdict: "strong_match" | "moderate_match" | "weak_match";
+
+        missingSkills: {
+            required: string[];
+            niceToHave: string[];
+        };
+
+        missingExperience: string[];
+
+        notes: string;
+    };
+
+    generalSuggestions: string[];
+
+    fieldSuggestions: {
+        professional_summary?: {
+            current: string;
+            suggested: string;
+            reason: string;
+        };
+
+        experiences?: Array<{
+            index: number;
+            suggested: {
+                id?: string;
+                resumeId?: string;
+                title: string;
+                organization: string;
+                description: string;
+                startDate: string;
+                isCurrent: boolean;
+                endDate?: never;
+            };
+            reason: string;
+        }>;
+
+        educations?: Array<{
+            index: number;
+            suggested: {
+                id?: string;
+                resumeId?: string;
+                graduationDate: string;
+                institution: string;
+                degree: string;
+                field: string;
+                gpa?: string;
+            };
+            reason: string;
+        }>;
+
+        projects?: Array<{
+            index: number;
+            suggested: {
+                id?: string;
+                resumeId?: string;
+                name: string;
+                description: string;
+                type: string;
+            };
+            reason: string;
+        }>;
+
+        skills?: {
+            current: string[];
+            suggested: string[];
+            reason: string;
+        };
+    };
+};

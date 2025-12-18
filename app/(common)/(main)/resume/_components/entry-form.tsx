@@ -41,7 +41,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 
-const formatDisplayDate = (dateString: string | undefined) => {
+export const formatDisplayDate = (dateString: string | undefined) => {
   if (!dateString) return "";
   return dateString;
 };

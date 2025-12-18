@@ -1,4 +1,5 @@
 import { OpenRouter } from '@openrouter/sdk';
+import { model } from './genai';
 
 const openRouter = new OpenRouter({
     apiKey: process.env.OPENROUTER_KEY

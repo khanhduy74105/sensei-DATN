@@ -123,7 +123,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         </DialogContent>
       </Dialog>
       <div className="flex-1 flex gap-6">
-        <aside className="w-full md:w-1/2 lg:w-1/3 bg-card border border-border rounded-md p-6 flex flex-col shadow-sm">
+        <aside className="w-full md:w-1/2 lg:w-2/5 bg-card border border-border rounded-md p-6 flex flex-col shadow-sm">
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-4">
             {questions.map((_, idx) => {
@@ -166,6 +166,17 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
             </div>
           </div>
 
+          {userAnswers.at(selectedIndex) && (
+            <div className="mb-5 p-4 rounded-md border border-border bg-muted/50">
+              <div className="text-sm text-muted-foreground font-medium mb-2">
+                {`User's answer`}
+              </div>
+              <div className="text-base text-foreground">
+                {userAnswers.at(selectedIndex)}
+              </div>
+            </div>
+          )}
+
           {/* Note area (now a highlighted div with icon) */}
           <div className="mt-auto bg-muted" aria-hidden>
             <div
@@ -189,7 +200,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         </aside>
 
         {/* Right column: camera + record control */}
-        <main className="flex-1 md:1/2 bg-card border border-border rounded-md p-6 flex flex-col items-center shadow-sm">
+        <main className="flex-1 md:1/2 lg:w-3/5 bg-card border border-border rounded-md p-6 flex flex-col items-center shadow-sm">
           <div
             className={`w-full h-80 bg-muted rounded-md flex items-center justify-center border border-dashed border-border transition-shadow duration-300 relative ${
               isSoundDetected ? "ring-4 ring-green-500/30" : ""

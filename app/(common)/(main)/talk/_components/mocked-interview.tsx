@@ -10,11 +10,11 @@ const MockedInterviews = ({
   mockedInterviews: ILiveMockInterview[];
 }) => {
   return (
-    <div>
+    <>
       {mockedInterviews.map((interview) => (
         <InterviewedCard key={interview.id} interviewData={interview} />
       ))}
-    </div>
+    </>
   );
 };
 
