@@ -29,7 +29,7 @@ export default async function EditCoverLetterPage({ params }: Props) {
         </h1>
       </div>
 
-      <CoverLetterPreview content={coverLetter?.content ?? ''} />
+      <CoverLetterPreview coverLetter={coverLetter} />
     </div>
   );
 }

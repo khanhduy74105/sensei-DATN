@@ -3,7 +3,6 @@
 import { db } from "@/lib/prisma";
 import { ICoverLetter } from "@/types";
 import { auth } from "@clerk/nextjs/server";
-import { model } from "../lib/genai";
 import getGeneratedAIContent from "@/lib/openRouter";
 
 export async function generateCoverLetter(data: Partial<ICoverLetter>) {
@@ -102,6 +101,27 @@ export async function getCoverLetter(id: string) {
             id,
             userId: user.id,
         },
+    });
+}
+
+export async function updateCoverLetter(id: string, content: string) {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    return await db.coverLetter.update({
+        where: {
+            id,
+            userId: user.id,
+        },
+        data: {
+            content: content
+        }
     });
 }
 

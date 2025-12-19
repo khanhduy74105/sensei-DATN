@@ -5,110 +5,99 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import getGeneratedAIContent from "@/lib/openRouter";
 
-export async function createResume(data: Partial<IResumeContent> & { title: string }) {
+export async function createResume(
+    data: Partial<IResumeContent> & { title: string }
+) {
     const { userId } = await auth();
-    if (!userId) throw new Error('User not authenticated');
+    if (!userId) throw new Error("User not authenticated");
 
     const user = await db.user.findUnique({
-        where: { clerkUserId: userId }
+        where: { clerkUserId: userId },
+        select: { id: true },
     });
-    if (!user) throw new Error('User not found');
+    if (!user) throw new Error("User not found");
 
-    try {
-        // Prepare create object for main Resume
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const createData: any = {
-            userId: user.id,
-            title: data.title,
-            content: data.content || "",
-            atsScore: data.atsScore,
-            accentColor: data.accentColor,
-            template: data.template,
-            json: data.json,
-            feedback: data.feedback,
-            skills: data.skills,
-            professional_summary: data.professional_summary
-        };
-
-        // 1. Personal Info (create if exists)
-        if (data.personalInfo) {
-            const { id, resumeId, fullName, email, phone, profession, linkedin, location, website } = data.personalInfo;
-            createData.personalInfo = {
-                create: {
-                    fullName: fullName || '',
-                    email: email || '',
-                    phone: phone || '',
-                    profession: profession || '',
-                    linkedin: linkedin || '',
-                    location: location || '',
-                    website: website || ''
-                }
-            };
-        }
-
-        // 2. Experiences (create many if exists)
-        if (data.experiences && Array.isArray(data.experiences)) {
-            createData.experiences = {
-                create: data.experiences.map(exp => {
-                    const { id, resumeId, title, organization, startDate, endDate, isCurrent, description } = exp;
-                    return {
-                        title: title || '',
-                        organization: organization || '',
-                        startDate: startDate || '',
-                        endDate: endDate || '',
-                        isCurrent: typeof isCurrent === 'boolean' ? isCurrent : false,
-                        description: description || ''
-                    };
-                })
-            };
-        }
-
-        // 3. Educations (create many if exists)
-        if (data.educations && Array.isArray(data.educations)) {
-            createData.educations = {
-                create: data.educations.map(edu => {
-                    const { id, resumeId, degree, institution, field, graduationDate, gpa } = edu;
-                    return {
-                        degree: degree || '',
-                        institution: institution || '',
-                        field: field || '',
-                        graduationDate: graduationDate || '',
-                        gpa: gpa || ''
-                    };
-                })
-            };
-        }
-
-        // 4. Projects (create many if exists)
-        if (data.projects && Array.isArray(data.projects)) {
-            createData.projects = {
-                create: data.projects.map(proj => {
-                    const { id, resumeId, name, description, type } = proj;
-                    return {
-                        name: name || '',
-                        description: description || '',
-                        type: type || ''
-                    };
-                })
-            };
-        }
-
-        const resume = await db.resume.create({
-            data: createData,
-            include: {
-                personalInfo: true,
-                experiences: true,
-                educations: true,
-                projects: true,
-            }
+    const resumeId = await db.$transaction(async (tx) => {
+        // 1️⃣ Create resume (1 query)
+        const resume = await tx.resume.create({
+            data: {
+                userId: user.id,
+                title: data.title,
+                content: data.content ?? "",
+                atsScore: data.atsScore,
+                accentColor: data.accentColor,
+                template: data.template,
+                json: data.json,
+                feedback: data.feedback,
+                skills: data.skills,
+                professional_summary: data.professional_summary,
+            },
+            select: { id: true },
         });
-        return resume;
-    } catch (error) {
-        if (error instanceof Error) {
-            console.log("Error saving resume:", error);
-            throw new Error("Failed to save resume")
+
+        const id = resume.id;
+
+        // 2️⃣ Personal info
+        if (data.personalInfo) {
+            const { id: _, resumeId: __, ...info } = data.personalInfo;
+            await tx.resumePersonalInfo.create({
+                data: {
+                    resumeId: id,
+                    fullName: info.fullName || '',
+                    email: info.email || '',
+                    phone: info.phone || '',
+                    profession: info.profession || '',
+                    linkedin: info.linkedin || '',
+                    location: info.location || '',
+                    website: info.website || ''
+                },
+            });
         }
-    }
+
+        // 3️⃣ Experiences
+        if (data.experiences?.length) {
+            await tx.resumeExperience.createMany({
+                data: data.experiences.map(({ id: _, resumeId: __, ...e }) => ({
+                    title: e.title || '',
+                    organization: e.organization || '',
+                    startDate: e.startDate || '',
+                    endDate: e.endDate || '',
+                    isCurrent: typeof e.isCurrent === 'boolean' ? e.isCurrent : false,
+                    description: e.description || '',
+                    resumeId: id,
+                })),
+            });
+        }
+
+        // 4️⃣ Educations
+        if (data.educations?.length) {
+            await tx.resumeEducation.createMany({
+                data: data.educations.map(({ id: _, resumeId: __, ...e }) => ({
+                    degree: e.degree || '',
+                    institution: e.institution || '',
+                    field: e.field || '',
+                    graduationDate: e.graduationDate || '',
+                    gpa: e.gpa || '',
+                    resumeId: id,
+                })),
+            });
+        }
+
+        // 5️⃣ Projects
+        if (data.projects?.length) {
+            await tx.resumeProject.createMany({
+                data: data.projects.map(({ id: _, resumeId: __, ...p }) => ({
+                    ...p,
+                    resumeId: id,
+                })),
+            });
+        }
+
+        return id;
+    });
+
+    // ❌ không return object lớn
+    return { id: resumeId };
 }
 
 export async function getAllResumes() {
@@ -181,7 +170,8 @@ export async function getResumePublicById(id: string) {
 }
 
 export const updateResumeContent = async (id: string, data: IResumeContent) => {
-    // Destructure fields from data
+    console.time("action");
+
     const {
         content,
         atsScore,
@@ -190,128 +180,83 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
         title,
         json,
         feedback,
-        personalInfo,
+        skills,
         professional_summary,
+        personalInfo,
         experiences,
         educations,
         projects,
-        skills
     } = data;
 
-    // Prepare update object for main Resume
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: any = {
-        content,
-        atsScore,
-        accentColor,
-        template,
-        title,
-        json,
-        feedback,
-        skills,
-        professional_summary
-        // professional_summary is not a direct field in Resume, but could be stored in json or feedback
-    };
+    await db.$transaction(async (tx) => {
+        // 1️⃣ Update resume (1 query)
+        await tx.resume.update({
+            where: { id },
+            data: {
+                content,
+                atsScore,
+                accentColor,
+                template,
+                title,
+                json,
+                feedback,
+                skills,
+                professional_summary,
+            },
+            select: { id: true },
+        });
 
-    // Update related models
-    // 1. Personal Info (update if exists, else create)
-    if (personalInfo) {
-        // Remove id and resumeId from update/create
-        const { id, resumeId, ...infoFields } = personalInfo;
-        updateData.personalInfo = {
-            upsert: {
-                update: { ...infoFields },
-                create: { ...infoFields }
-            }
-        };
-    }
-    // No other nested upserts or related fields require this treatment.
+        // 2️⃣ Personal info (2 query max)
+        if (personalInfo) {
+            const { id: _, resumeId: __, ...info } = personalInfo;
+            await tx.resumePersonalInfo.upsert({
+                where: { resumeId: id },
+                update: info,
+                create: { ...info, resumeId: id },
+            });
+        }
 
-    // 2. Experiences (upsert each, remove id/resumeId)
-    if (experiences) {
-        updateData.experiences = {
-            deleteMany: {},
-            upsert: experiences.map(exp => {
-                const { id, resumeId, startDate, endDate, isCurrent, ...rest } = exp;
-                return {
-                    where: {
-                        id: (exp).id || undefined,
-                    },
-                    update: {
-                        ...rest,
-                        startDate: startDate,
-                        endDate: endDate,
-                        isCurrent: isCurrent,
-                    },
-                    create: {
-                        ...rest,
-                        startDate: startDate,
-                        endDate: endDate,
-                        isCurrent: isCurrent,
-                    }
-                };
-            })
-        };
-    }
+        // 3️⃣ Experiences (2 query)
+        if (experiences?.length) {
+            await tx.resumeExperience.deleteMany({ where: { resumeId: id } });
+            await tx.resumeExperience.createMany({
+                data: experiences.map(({ id: _, resumeId: __, ...e }) => ({
+                    ...e,
+                    resumeId: id,
+                })),
+            });
+        }
 
-    // 3. Educations (upsert each, remove id/resumeId)
-    if (educations) {
-        updateData.educations = {
-            deleteMany: {},
-            upsert: educations.map(edu => {
-                const { id, resumeId, graduationDate, ...rest } = edu;
-                return {
-                    where: {
-                        id: (edu).id || undefined,
-                    },
-                    update: {
-                        ...rest,
-                        graduationDate: graduationDate,
-                    },
-                    create: {
-                        ...rest,
-                        graduationDate: graduationDate,
-                    }
-                };
-            })
-        };
-    }
+        // 4️⃣ Educations (2 query)
+        if (educations?.length) {
+            await tx.resumeEducation.deleteMany({ where: { resumeId: id } });
+            await tx.resumeEducation.createMany({
+                data: educations.map(({ id: _, resumeId: __, ...e }) => ({
+                    ...e,
+                    resumeId: id,
+                })),
+            });
+        }
 
-    // 4. Projects (upsert each, remove id/resumeId)
-    if (projects) {
-        updateData.projects = {
-            deleteMany: {},
-            upsert: projects.map(proj => {
-                const { id, resumeId, ...rest } = proj;
-                return {
-                    where: {
-                        id: (proj).id || undefined,
-                    },
-                    update: {
-                        ...rest,
-                    },
-                    create: {
-                        ...rest,
-                    }
-                };
-            })
-        };
-    }
-
-    // Update Resume
-    const updated = await db.resume.update({
-        where: { id },
-        data: updateData,
-        include: {
-            personalInfo: true,
-            experiences: true,
-            educations: true,
-            projects: true,
+        // 5️⃣ Projects (2 query)
+        if (projects?.length) {
+            await tx.resumeProject.deleteMany({ where: { resumeId: id } });
+            await tx.resumeProject.createMany({
+                data: projects.map(({ id: _, resumeId: __, ...p }) => ({
+                    ...p,
+                    resumeId: id,
+                })),
+            });
         }
     });
+
+    console.timeEnd("action");
+
     revalidatePath("/resume");
-    return updated;
-}
+
+    return { success: true };
+};
+
 
 export async function deleteResume(id: string) {
     const { userId } = await auth();
@@ -337,6 +282,7 @@ export async function deleteResume(id: string) {
 }
 
 export async function toggleResumePublicStatus(id: string, isPublic: boolean) {
+    console.time('toggle public');
     const { userId } = await auth();
     if (!userId) throw new Error('User not authenticated');
     const user = await db.user.findUnique({
@@ -352,6 +298,8 @@ export async function toggleResumePublicStatus(id: string, isPublic: boolean) {
             isPublic: isPublic
         }
     });
+    console.timeEnd('toggle public');
+
     revalidatePath("/resume");
     return Boolean(updated.id === id);
 };
@@ -431,9 +379,8 @@ export async function improveWithAI({
     }
 }
 
-export async function convertExtractedTextToResumeData(resumeExtractedText: string) {
-    try {
-        const RESUME_PARSING_PROMPT = `
+export async function convertExtractedTextToResumeData(title: string, resumeExtractedText: string) {
+    const RESUME_PARSING_PROMPT = `
         You are an expert resume parser. Extract and structure information from the provided resume text into a JSON format.
 
         **Instructions:**
@@ -541,24 +488,23 @@ export async function convertExtractedTextToResumeData(resumeExtractedText: stri
         **Output JSON:**
         `;
 
-        const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT);
-        const response = result.response;
-        const text = response.text();
-        const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
-        const parsedResume = JSON.parse(cleanedText)
-        const { userId } = await auth();
-        if (!userId) throw new Error('User not authenticated');
+    const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT);
+    const response = result.response;
+    const text = response.text();
+    const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+    const parsedResume = JSON.parse(cleanedText)
+    const { userId } = await auth();
+    if (!userId) throw new Error('User not authenticated');
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId }
-        });
-        if (!user) throw new Error('User not found');
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId }
+    });
+    if (!user) throw new Error('User not found');
 
-        const createdResume = await createResume(parsedResume)
-        return createdResume;
-    } catch (error) {
-        console.log('Error when convert extracted resume to formated data', error)
-    }
+    parsedResume.title = title;
+
+    const createdResume = await createResume(parsedResume)
+    return createdResume;
 }
 
 export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {

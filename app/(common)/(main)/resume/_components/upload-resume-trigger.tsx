@@ -16,10 +16,13 @@ import {
 import { Upload, FileText, X, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState, useRef } from "react";
+import { toast } from "sonner";
 
 const UploadResumeTrigger = () => {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [resumeTitle, setResumeTitle] = useState("");
   const [extractedText, setExtractedText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +45,7 @@ const UploadResumeTrigger = () => {
       const { default: pdfToText } = await import("react-pdftotext");
       const text = await pdfToText(selectedFile);
       setExtractedText(text.trim());
+      setResumeTitle(selectedFile.name);
     } catch (error) {
       console.error("Failed when extract PDF:", error);
       alert("Failed when extract PDF");
@@ -60,10 +64,20 @@ const UploadResumeTrigger = () => {
   };
 
   const onNextStep = async () => {
-    const resume = await convertExtractedTextToResumeData(extractedText);
-    if (resume) {
-      router.push(`/resume/${resume?.id}`);
+    setLoading(true);
+    try {
+      const resume = await convertExtractedTextToResumeData(
+        resumeTitle,
+        extractedText
+      );
+      if (resume) {
+        router.push(`/resume/${resume?.id}`);
+      }
+      toast.success("Created extracted resume!");
+    } catch (error) {
+      toast.error("Error when extracted resume, please try again");
     }
+    setLoading(false);
   };
 
   return (
@@ -171,6 +185,7 @@ const UploadResumeTrigger = () => {
             }}
           >
             Continue
+            {loading && <Loader2 />}
           </Button>
         </DialogFooter>
       </DialogContent>

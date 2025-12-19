@@ -78,7 +78,7 @@ export default function HeaderClient() {
               <DropdownMenuItem>
                 <Link href="/talk" className="flex items-center gap-2">
                   <Camera className="h-4 w-4" />
-                  Mock talk
+                  Mock interview
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
