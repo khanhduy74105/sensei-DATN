@@ -8,10 +8,20 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-
-export default function Home() {
+export default async function Home() {
+  const user = await currentUser();
+  if (user?.publicMetadata.role === "admin") {
+    redirect("/admin");
+  }
 
   return (
     <div className="">
@@ -19,7 +29,7 @@ export default function Home() {
 
       <HeroSection />
 
-       {/* Features Section */}
+      {/* Features Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-tighter text-center mb-12">
@@ -196,7 +206,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }
