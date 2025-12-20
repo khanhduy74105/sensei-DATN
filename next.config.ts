@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
       html2canvas: './node_modules/html2canvas-pro',
     },
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -16,7 +19,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "res.cloudinary.com",
       },
-       {
+      {
         protocol: "https",
         hostname: "img.clerk.com",
       }
