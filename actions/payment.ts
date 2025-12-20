@@ -1,5 +1,6 @@
 "use server"
 
+import { getAppUrl } from "@/lib/getAPpURL";
 import { db } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { auth, currentUser } from "@clerk/nextjs/server";
@@ -100,8 +101,8 @@ export async function createCheckoutSession() {
                 quantity: 1,
             },
         ],
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}`,
+        success_url: `${getAppUrl()}`,
+        cancel_url: `${getAppUrl()}`,
         metadata: {
             userId: user.id, // ⭐⭐⭐ QUAN TRỌNG NHẤT
         },
