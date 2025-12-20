@@ -1,7 +1,6 @@
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/prisma";
 import Stripe from "stripe";
-select: { }
 
 export async function POST(req: Request) {
     // 1️⃣ Lấy raw body
