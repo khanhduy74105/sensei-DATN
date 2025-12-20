@@ -53,9 +53,9 @@ export default function CoverLetterGenerator() {
     try {
       await generateLetterFn(data);
     } catch (error) {
-        if (error instanceof Error) {
-            toast.error(error.message || "Failed to generate cover letter");
-        }
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to generate cover letter");
+      }
     }
   };
 

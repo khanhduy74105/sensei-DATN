@@ -1,5 +1,5 @@
+import { decreaseBalance } from '@/actions/payment';
 import { OpenRouter } from '@openrouter/sdk';
-import { model } from './genai';
 
 const openRouter = new OpenRouter({
     apiKey: process.env.OPENROUTER_KEY
@@ -16,6 +16,8 @@ export default async function getGeneratedAIContent(prompt: string) {
         ],
         stream: false,
     });
+
+    await decreaseBalance()
 
     return {
         response: {

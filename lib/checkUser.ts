@@ -28,6 +28,12 @@ export const checkUser = async () => {
                     name,
                     imageUrl: user.imageUrl || null,
                     email: user.emailAddresses[0]?.emailAddress || '',
+                    UserCredit: {
+                        create: {
+                            balance: 10,
+                            isPaid: false
+                        }
+                    }
                 }
             });
 

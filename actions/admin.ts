@@ -25,6 +25,7 @@ export async function getUsers(page: number = 1): Promise<UserRow[]> {
       coverLetter: { select: { id: true } },
       assessments: { select: { id: true } },
       liveMockInterviews: { select: { id: true } },
+      UserCredit: { select: { isPaid: true } }
     },
   });
 
@@ -38,5 +39,7 @@ export async function getUsers(page: number = 1): Promise<UserRow[]> {
     coverLetterCount: u.coverLetter.length,
     assessmentCount: u.assessments.length,
     mockInterviewCount: u.liveMockInterviews.length,
+    isPaid: u.UserCredit?.isPaid || undefined
   })) ?? [];
 }
+

@@ -1,12 +1,7 @@
 // components/header-client.tsx
 "use client";
 
-import {
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "./ui/button";
@@ -18,6 +13,7 @@ import {
   PenBox,
   Camera,
   StarsIcon,
+  Crown,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,8 +21,33 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { useUpgradeModal } from "@/contexts/ModalContext";
+import { JsonValue } from "@prisma/client/runtime/library";
+import { useEffect } from "react";
 
-export default function HeaderClient() {
+export default function HeaderClient({
+  userCredit
+}: {
+  userCredit: {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    userId: string;
+    balance: number;
+    isPaid: boolean | null;
+    metadata: JsonValue;
+  } | null;
+}) {
+  const { open, setBalanceLeft, setIsPaid } = useUpgradeModal();
+
+  useEffect(() => {
+    setIsPaid(userCredit?.isPaid ?? false);
+  }, [userCredit?.isPaid, setIsPaid]);
+
+  useEffect(() => {
+    setBalanceLeft(userCredit?.balance ?? 0);
+  }, [userCredit?.balance, setBalanceLeft]);
+
   return (
     <nav className="container mx-auto flex h-16 items-center justify-between px-4">
       <Link href="/">
@@ -41,6 +62,12 @@ export default function HeaderClient() {
 
       <div className="flex items-center space-x-2">
         <SignedIn>
+          {!userCredit?.isPaid && (
+            <Button onClick={() => open()}>
+              <Crown />
+            </Button>
+          )}
+
           <Link href="/dashboard">
             <Button variant="outline">
               <LayoutDashboard className="h-4 w-4" />
@@ -64,7 +91,10 @@ export default function HeaderClient() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link href="/ai-cover-letter" className="flex items-center gap-2">
+                <Link
+                  href="/ai-cover-letter"
+                  className="flex items-center gap-2"
+                >
                   <PenBox className="h-4 w-4" />
                   Cover letter
                 </Link>

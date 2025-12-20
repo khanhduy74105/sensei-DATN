@@ -8,47 +8,43 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(uuid())
-  clerkUserId     String           @unique // clerk user id
-  email           String           @unique
-  name            String?
-  imageUrl        String?
-  industry        String? // Combined industry-subindustry (e.g., "tech-software-development")
-  industryInsight IndustryInsight? @relation(fields: [industry], references: [industry], onDelete: Cascade)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-
-  // Profile fields
-  bio        String?
-  experience Int? // Years of experience
-
-  // Relations
-  skills             String[] // Array of skills
+  id                 String              @id @default(uuid())
+  clerkUserId        String              @unique
+  email              String              @unique
+  name               String?
+  imageUrl           String?
+  industry           String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  bio                String?
+  experience         Int?
+  skills             String[]
   assessments        Assessment[]
-  resume             Resume[]
   coverLetter        CoverLetter[]
   liveMockInterviews LiveMockInterview[]
+  resume             Resume[]
+  industryInsight    IndustryInsight?    @relation(fields: [industry], references: [industry], onDelete: Cascade)
+  UserCredit         UserCredit?
 }
 
 model Assessment {
   id             String   @id @default(cuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quizScore      Float // Overall quiz score
-  questions      Json[] // Array of {question, answer, userAnswer, isCorrect}
-  category       String // "Technical", "Behavioral", etc.
-  improvementTip String? // AI-generated improvement tip
+  quizScore      Float
+  questions      Json[]
+  category       String
+  improvementTip String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model Resume {
   id                   String              @id @default(cuid())
-  userId               String // Removed @unique so user can have many resumes
-  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content              String              @db.Text // Markdown content
+  userId               String
+  content              String
   title                String?
   atsScore             Float?
   feedback             String?
@@ -59,17 +55,17 @@ model Resume {
   template             String?             @default("classic")
   accentColor          String?             @default("neutral")
   professional_summary String?
-  personalInfo         ResumePersonalInfo?
-  experiences          ResumeExperience[]
+  skills               String[]
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   educations           ResumeEducation[]
+  experiences          ResumeExperience[]
+  personalInfo         ResumePersonalInfo?
   projects             ResumeProject[]
-  skills               String[] // Array of skills
 }
 
 model ResumePersonalInfo {
   id         String  @id @default(cuid())
   resumeId   String  @unique
-  resume     Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   image      String?
   fullName   String?
   profession String?
@@ -78,80 +74,69 @@ model ResumePersonalInfo {
   location   String?
   linkedin   String?
   website    String?
+  resume     Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 }
 
 model ResumeExperience {
   id           String   @id @default(cuid())
   resumeId     String
-  resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   title        String
   organization String
   description  String
   startDate    String
   endDate      String?
   isCurrent    Boolean?
+  resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 }
 
 model ResumeEducation {
   id             String  @id @default(cuid())
   resumeId       String
-  resume         Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   graduationDate String
   institution    String
   degree         String
   field          String
   gpa            String?
+  resume         Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 }
 
 model ResumeProject {
   id          String @id @default(cuid())
   resumeId    String
-  resume      Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   name        String
   description String
   type        String
+  resume      Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 }
 
 model CoverLetter {
   id             String   @id @default(cuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content        String // Markdown content
+  content        String
   jobDescription String?
-  companyName    String // Name of the company applying to
-  jobTitle       String // Position applying for
-  status         String   @default("draft") // draft, completed
+  companyName    String
+  jobTitle       String
+  status         String   @default("draft")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// Combined Industry Trends and Salary Insights
 model IndustryInsight {
-  id       String @id @default(cuid())
-  industry String @unique // The industry this data belongs to (e.g., "tech-software-development")
-
-  // Users in this industry
-  users User[]
-
-  // Salary data
-  salaryRanges Json[] // Array of { role: string, min: float, max: float, median: float, location: string? }
-
-  // Industry trends
-  growthRate  Float // Industry growth rate
-  demandLevel String // "High", "Medium", "Low"
-  topSkills   String[] // Most in-demand skills
-
-  // Market conditions
-  marketOutlook String // "Positive", "Neutral", "Negative"
-  keyTrends     String[] // Array of current industry trends
-
-  // Learning suggestions
-  recommendedSkills String[] // Skills recommended for the industry
-
-  lastUpdated DateTime @default(now())
-  nextUpdate  DateTime // Scheduled update time
+  id                String   @id @default(cuid())
+  industry          String   @unique
+  salaryRanges      Json[]
+  growthRate        Float
+  demandLevel       String
+  topSkills         String[]
+  marketOutlook     String
+  keyTrends         String[]
+  recommendedSkills String[]
+  lastUpdated       DateTime @default(now())
+  nextUpdate        DateTime
+  users             User[]
 
   @@index([industry])
 }
@@ -159,13 +144,13 @@ model IndustryInsight {
 model LiveMockInterview {
   id                    String                  @id @default(cuid())
   userId                String
-  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  yoes                  Int                     @default(0) // Years of experience
-  role                  String // Role applying for
-  description           String // Job description
+  yoes                  Int                     @default(0)
+  role                  String
+  description           String
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   LiveInterviewQuestion LiveInterviewQuestion[]
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -173,14 +158,25 @@ model LiveMockInterview {
 model LiveInterviewQuestion {
   id                  String            @id @default(cuid())
   liveMockInterviewId String
-  liveMockInterview   LiveMockInterview @relation(fields: [liveMockInterviewId], references: [id], onDelete: Cascade)
   question            String
   correctAnswer       String
   feedback            String?
-  rating              Int? // 1-5 rating
+  rating              Int?
   userAnswer          String?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+  liveMockInterview   LiveMockInterview @relation(fields: [liveMockInterviewId], references: [id], onDelete: Cascade)
 
   @@index([liveMockInterviewId])
+}
+
+model UserCredit {
+  id        String   @id @default(dbgenerated("encode(gen_random_bytes(12), 'hex'::text)"))
+  userId    String   @unique
+  balance   Int      @default(10)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  isPaid    Boolean? @default(false)
+  metadata  Json?
+  User      User     @relation(fields: [userId], references: [id])
 }

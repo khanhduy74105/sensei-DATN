@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { ICoverLetter } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import getGeneratedAIContent from "@/lib/openRouter";
+import { isOutOfBalance } from "./payment";
 
 export async function generateCoverLetter(data: Partial<ICoverLetter>) {
     const { userId } = await auth();
@@ -14,6 +15,11 @@ export async function generateCoverLetter(data: Partial<ICoverLetter>) {
     });
 
     if (!user) throw new Error("User not found");
+
+    const outOfBalance = await isOutOfBalance(userId);
+    if (outOfBalance) {
+        throw Error('OUT_OF_BALANCE')
+    }
 
     const prompt = `
     Write a professional cover letter for a ${data.jobTitle} position at ${data.companyName

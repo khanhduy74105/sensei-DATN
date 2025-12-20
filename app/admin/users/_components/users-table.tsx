@@ -5,6 +5,7 @@ import { UserRow } from "../../type";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { CheckCircle, X } from "lucide-react";
 
 const AdminUsersPageClient = ({
   users,
@@ -26,6 +27,7 @@ const AdminUsersPageClient = ({
               <th className="px-4 py-3 text-left">Avatar</th>
               <th className="px-4 py-3 text-left">Email</th>
               <th className="px-4 py-3 text-left">Name</th>
+              <th className="px-4 py-3 text-left">Upgraded</th>
               <th className="px-4 py-3 text-center">Resumes</th>
               <th className="px-4 py-3 text-center">Cover Letters</th>
               <th className="px-4 py-3 text-center">Assessments</th>
@@ -59,10 +61,19 @@ const AdminUsersPageClient = ({
                   </td>
                   <td className="px-4 py-2">{user.email}</td>
                   <td className="px-4 py-2">{user.name || "-"}</td>
+                  <td className="px-4 py-2 flex justify-center items-center">
+                    {user.isPaid ? <CheckCircle color="green" /> : <X />}
+                  </td>
                   <td className="px-4 py-2 text-center">{user.resumeCount}</td>
-                  <td className="px-4 py-2 text-center">{user.coverLetterCount}</td>
-                  <td className="px-4 py-2 text-center">{user.assessmentCount}</td>
-                  <td className="px-4 py-2 text-center">{user.mockInterviewCount}</td>
+                  <td className="px-4 py-2 text-center">
+                    {user.coverLetterCount}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {user.assessmentCount}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {user.mockInterviewCount}
+                  </td>
                   <td className="px-4 py-2">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
@@ -87,9 +98,7 @@ const AdminUsersPageClient = ({
         <Button
           variant="outline"
           disabled={currentPage <= 1}
-          onClick={() =>
-            router.replace(`/admin/users?page=${currentPage - 1}`)
-          }
+          onClick={() => router.replace(`/admin/users?page=${currentPage - 1}`)}
         >
           Previous
         </Button>
@@ -97,9 +106,7 @@ const AdminUsersPageClient = ({
         <Button
           variant="outline"
           disabled={(users?.length ?? 0) < 20}
-          onClick={() =>
-            router.replace(`/admin/users?page=${currentPage + 1}`)
-          }
+          onClick={() => router.replace(`/admin/users?page=${currentPage + 1}`)}
         >
           Next
         </Button>

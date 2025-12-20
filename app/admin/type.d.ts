@@ -8,4 +8,5 @@ export interface UserRow {
   coverLetterCount: number;
   assessmentCount: number;
   mockInterviewCount: number;
+  isPaid?: boolean
 }

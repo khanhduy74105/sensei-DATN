@@ -1,4 +1,5 @@
 import Header from "@/components/header";
+import { UpgradeModalProvider } from "@/contexts/ModalContext";
 import React from "react";
 
 const layout = ({
@@ -8,9 +9,11 @@ const layout = ({
 }>) => {
   return (
     <div>
-      <Header />
+      <UpgradeModalProvider>
+        <Header />
 
-      {children}
+        {children}
+      </UpgradeModalProvider>
     </div>
   );
 };
