@@ -4,7 +4,6 @@ import { db } from "@/lib/prisma";
 import { IAssessment } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import getGeneratedAIContent from "@/lib/openRouter";
-import { isOutOfBalance } from "./payment";
 
 interface LiveQuizQuestion {
     question: string;
@@ -45,10 +44,7 @@ export async function generateLiveQuiz() {
       ]
     }
   `;
-    const outOfBalance = await isOutOfBalance(userId);
-    if (outOfBalance) {
-        throw Error('OUT_OF_BALANCE')
-    }
+
     try {
         const result = await getGeneratedAIContent(prompt);
         const response = result.response;
@@ -103,10 +99,6 @@ export async function saveLiveQuizResult(questions: LiveQuizQuestion[], answers:
       Keep the response under 2 sentences and make it encouraging.
       Don't explicitly mention the mistakes, instead focus on what to learn/practice.
     `;
-        const outOfBalance = await isOutOfBalance(userId);
-        if (outOfBalance) {
-            throw Error('OUT_OF_BALANCE')
-        }
         try {
             const tipResult = await getGeneratedAIContent(improvementPrompt);
 
@@ -190,10 +182,7 @@ export async function generateLiveInterviewQuestions({ role, description, yoes }
         ]
     }
   `;
-    const outOfBalance = await isOutOfBalance(userId);
-    if (outOfBalance) {
-        throw Error('OUT_OF_BALANCE')
-    }
+
     try {
         const result = await getGeneratedAIContent(prompt);
         const response = result.response;

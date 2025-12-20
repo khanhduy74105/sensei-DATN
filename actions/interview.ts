@@ -5,7 +5,6 @@ import { IAssessment, ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
-import { isOutOfBalance } from "./payment";
 
 interface QuizQuestion {
   question: string;
@@ -27,10 +26,6 @@ export async function generateQuiz(entry?: { role: string; skills: string[] }) {
   });
 
   if (!user) throw new Error("User not found");
-  const outOfBalance = await isOutOfBalance(userId);
-  if (outOfBalance) {
-    throw Error('OUT_OF_BALANCE')
-  }
   let prompt = entry ?
     `Generate 10 technical interview questions for a ${entry.role} professional ${entry.skills?.length ? ` with expertise in ${entry.skills.join(", ")}` : ""}`
     : `Generate 10 technical interview questions for a ${user.industry
@@ -188,10 +183,6 @@ export async function generateInterviewQuestions({ role, description, yoes }: { 
       ]
     }
   `;
-  const outOfBalance = await isOutOfBalance(userId);
-  if (outOfBalance) {
-    throw Error('OUT_OF_BALANCE')
-  }
   try {
     const result = await getGeneratedAIContent(prompt);
     const response = result.response;
@@ -318,10 +309,7 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
       ]
     }
   `;
-    const outOfBalance = await isOutOfBalance(userId);
-    if (outOfBalance) {
-      throw Error('OUT_OF_BALANCE')
-    }
+
     const result = await getGeneratedAIContent(prompt);
     const response = result.response;
     const text = response.text();

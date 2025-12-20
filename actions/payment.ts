@@ -31,13 +31,21 @@ export async function getUserCredit() {
     return userCredit;
 }
 
-export async function isOutOfBalance(userId: string) {
+export async function isOutOfBalance() {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+    if (!user) {
+        throw new Error("Can not found user");
+    }
     const userCredit = await db.userCredit.findFirst({
         where: {
-            userId: userId
+            userId: user?.id
         }
     })
-    // return true;
     return !userCredit?.isPaid && userCredit?.balance && userCredit?.balance <= 0;
 }
 

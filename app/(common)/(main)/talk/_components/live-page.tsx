@@ -1,4 +1,3 @@
-// ...existing code...
 "use client";
 import { saveLiveInterviewResult } from "@/actions/interview";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { toast } from "sonner";
 interface LiveInterviewPageProps {
   mockInterview: ILiveMockInterview;
 }
+
 const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   const [questions] = useState<ILiveQuizQuestion[]>(mockInterview.questions);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -28,18 +28,40 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   );
   const [isSoundDetected, setIsSoundDetected] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const currentTranscriptRef = useRef<string>("");
+  const selectedIndexRef = useRef<number>(0); // Track current index
 
   const router = useRouter();
 
-  const goPrevious = () => setSelectedIndex((i) => Math.max(0, i - 1));
+  // Function to stop recording
+  const stopRecording = () => {
+    if (recognitionRef.current && recording) {
+      recognitionRef.current.stop();
+      setRecording(false);
+    }
+  };
+
+  const goPrevious = () => {
+    stopRecording(); // Stop recording when changing question
+    const newIndex = Math.max(0, selectedIndex - 1);
+    setSelectedIndex(newIndex);
+    selectedIndexRef.current = newIndex; // Update ref
+  };
+
   const goNext = () => {
-    setSelectedIndex((i) => Math.min(questions.length - 1, i + 1));
-    if (selectedIndex === questions.length - 1) {
+    stopRecording(); // Stop recording when changing question
+    const nextIndex = selectedIndex + 1;
+    
+    if (nextIndex >= questions.length) {
       setShowConfirmDialog(true);
+    } else {
+      setSelectedIndex(nextIndex);
+      selectedIndexRef.current = nextIndex; // Update ref
     }
   };
 
   const onExit = () => {
+    stopRecording();
     router.push("/talk");
   };
 
@@ -62,9 +84,16 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
     }
   };
 
+  // Initialize speech recognition
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      toast.error("Speech recognition is not supported in your browser.");
+      return;
+    }
+
     const recognition = new SpeechRecognition();
 
     recognition.continuous = true;
@@ -75,17 +104,73 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
       const transcript = Array.from(event.results)
         .map((result) => result[0].transcript)
         .join("");
-      userAnswers[selectedIndex] = transcript;
-      setUserAnswers([...userAnswers]);
+      
+      // Update current transcript
+      currentTranscriptRef.current = transcript;
+      
+      // Use ref to get current index (avoid closure issue)
+      const currentIndex = selectedIndexRef.current;
+      
+      // Update userAnswers state with current index
+      setUserAnswers((prev) => {
+        const newAnswers = [...prev];
+        newAnswers[currentIndex] = transcript;
+        return newAnswers;
+      });
+
       setIsSoundDetected(true);
-      // Reset sound detection after a short delay
       setTimeout(() => setIsSoundDetected(false), 1000);
     };
 
-    recognition.onend = () => setRecording(false);
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      if (event.error === "no-speech") {
+        toast.error("No speech detected. Please try again.");
+      }
+      setRecording(false);
+    };
+
+    recognition.onend = () => {
+      setRecording(false);
+    };
 
     recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
   }, []);
+
+  // Reset transcript when question changes
+  useEffect(() => {
+    selectedIndexRef.current = selectedIndex; // Sync ref with state
+    currentTranscriptRef.current = userAnswers[selectedIndex] || "";
+  }, [selectedIndex, userAnswers]);
+
+  const toggleRecording = () => {
+    if (recording) {
+      stopRecording();
+    } else {
+      try {
+        // Clear current answer when starting new recording
+        const currentIndex = selectedIndexRef.current;
+        currentTranscriptRef.current = "";
+        setUserAnswers((prev) => {
+          const newAnswers = [...prev];
+          newAnswers[currentIndex] = "";
+          return newAnswers;
+        });
+        
+        recognitionRef.current?.start();
+        setRecording(true);
+      } catch (error) {
+        console.error("Failed to start recording:", error);
+        toast.error("Failed to start recording. Please try again.");
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col p-6 gap-6 bg-muted">
@@ -122,6 +207,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       <div className="flex-1 flex gap-6">
         <aside className="w-full md:w-1/2 lg:w-2/5 bg-card border border-border rounded-md p-6 flex flex-col shadow-sm">
           {/* Badges */}
@@ -131,7 +217,11 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
               return (
                 <Button
                   key={idx}
-                  onClick={() => setSelectedIndex(idx)}
+                  onClick={() => {
+                    stopRecording();
+                    setSelectedIndex(idx);
+                    selectedIndexRef.current = idx; // Update ref
+                  }}
                   className={
                     "px-3 py-1 rounded-full text-sm font-medium transition-colors border " +
                     (selected
@@ -144,7 +234,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
                   {`Question #${idx + 1}`}
                   {userAnswers[idx] ? (
                     <CheckCircle
-                      className="inline-block w-3 h-3 bg-green-500 rounded-full"
+                      className="inline-block w-3 h-3 ml-1 text-green-500"
                       aria-label="Answered"
                     />
                   ) : null}
@@ -157,27 +247,34 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
           <div className="mb-5 p-4 rounded-md border border-border bg-muted/50">
             <div className="flex gap-2 items-center text-sm text-muted-foreground font-medium mb-2">
               <div className="">{`Q${selectedIndex + 1}`}</div>
-              <Button variant="ghost">
-                <AudioLines />
+              <Button variant="ghost" size="sm">
+                <AudioLines className="h-4 w-4" />
               </Button>
             </div>
             <div className="text-base text-foreground">
-              {questions.at(selectedIndex)?.question}
+              {questions[selectedIndex]?.question}
             </div>
           </div>
 
-          {userAnswers.at(selectedIndex) && (
+          {userAnswers[selectedIndex] && (
             <div className="mb-5 p-4 rounded-md border border-border bg-muted/50">
               <div className="text-sm text-muted-foreground font-medium mb-2">
                 {`User's answer`}
               </div>
-              <div className="text-base text-foreground">
-                {userAnswers.at(selectedIndex)}
-              </div>
+              <textarea
+                value={userAnswers[selectedIndex]}
+                onChange={(e) => {
+                  const newAnswers = [...userAnswers];
+                  newAnswers[selectedIndex] = e.target.value;
+                  setUserAnswers(newAnswers);
+                }}
+                className="w-full min-h-[100px] p-3 text-base text-foreground bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-accent resize-y"
+                placeholder="Your answer will appear here... You can edit it manually."
+              />
             </div>
           )}
 
-          {/* Note area (now a highlighted div with icon) */}
+          {/* Note area */}
           <div className="mt-auto bg-muted" aria-hidden>
             <div
               role="note"
@@ -191,7 +288,8 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
                 <div className="text-sm font-semibold">Notes</div>
                 <div className="text-sm opacity-90 mt-1">
                   {`Click "Start Recording Answer" to record the candidate's
-                  response. At the end you'll get feedback and a comparison
+                  response. Recording will automatically stop when you change questions.
+                  At the end you'll get feedback and a comparison
                   between the expected answer and the candidate's answer.`}
                 </div>
               </div>
@@ -202,13 +300,14 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         {/* Right column: camera + record control */}
         <main className="flex-1 md:1/2 lg:w-3/5 bg-card border border-border rounded-md p-6 flex flex-col items-center shadow-sm">
           <div
-            className={`w-full h-80 bg-muted rounded-md flex items-center justify-center border border-dashed border-border transition-shadow duration-300 relative ${
-              isSoundDetected ? "ring-4 ring-green-500/30" : ""
+            className={`w-full h-80 bg-muted rounded-md flex items-center justify-center border border-dashed border-border transition-all duration-300 relative ${
+              isSoundDetected ? "ring-4 ring-green-500/30 shadow-lg shadow-green-500/20" : ""
             }`}
           >
             <div className="text-center text-muted-foreground">
               <div className="text-xs opacity-80">
                 <Camera size={48} className="mx-auto mb-2" />
+                <p className="text-sm">Camera Preview</p>
               </div>
             </div>
             {isSoundDetected && (
@@ -218,22 +317,12 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
 
           <div className="mt-4 flex items-center gap-3">
             <Button
-              onClick={() => {
-                if (recording) {
-                  recognitionRef.current?.stop();
-                  setRecording(false);
-                } else {
-                  recognitionRef.current?.start();
-                  setRecording(true);
-                  userAnswers[selectedIndex] = "";
-                  setUserAnswers([...userAnswers]);
-                }
-              }}
+              onClick={toggleRecording}
               className={
                 "px-4 py-2 rounded-md text-sm font-medium transition-colors " +
                 (recording
                   ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  : "bg-primary/10 text-primary hover:bg-primary/20")
+                  : "bg-primary text-primary-foreground hover:bg-primary/90")
               }
             >
               {recording ? "Stop Recording Answer" : "Start Recording Answer"}
@@ -242,8 +331,8 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
             <div className="flex items-center text-sm text-muted-foreground">
               <span
                 className={
-                  "inline-block w-3 h-3 rounded-full mr-2 " +
-                  (recording ? "bg-destructive" : "bg-green-400")
+                  "inline-block w-3 h-3 rounded-full mr-2 transition-colors " +
+                  (recording ? "bg-destructive animate-pulse" : "bg-green-400")
                 }
                 aria-hidden
               />
@@ -261,6 +350,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         <Button
           onClick={goPrevious}
           variant={"secondary"}
+          disabled={selectedIndex === 0}
           className="px-4 py-2 bg-muted/50 border border-border rounded-md hover:bg-muted/60"
         >
           Previous
@@ -275,8 +365,8 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         </Button>
         <Button
           onClick={onExit}
-          variant={"secondary"}
-          className="px-4 py-2 bg-muted/50 border border-border rounded-md hover:bg-muted/60"
+          variant={"destructive"}
+          className="px-4 py-2"
         >
           Exit
         </Button>

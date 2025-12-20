@@ -4,7 +4,6 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import getGeneratedAIContent from "@/lib/openRouter";
-import { isOutOfBalance } from "./payment";
 
 export async function createResume(
     data: Partial<IResumeContent> & { title: string }
@@ -370,10 +369,7 @@ export async function improveWithAI({
         `;
 
     const prompt = basePrompt;
-    const outOfBalance = await isOutOfBalance(userId);
-    if (outOfBalance) {
-        throw Error('OUT_OF_BALANCE')
-    }
+
     try {
         const result = await getGeneratedAIContent(prompt);
         return result.response.text().trim();
@@ -661,10 +657,7 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
                 };
             };
         `
-        const outOfBalance = await isOutOfBalance(userId);
-        if (outOfBalance) {
-            throw Error('OUT_OF_BALANCE')
-        }
+
         const result = await getGeneratedAIContent(prompt);
         const response = result.response;
         const text = response.text();
