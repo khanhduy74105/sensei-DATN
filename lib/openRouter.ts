@@ -14,6 +14,17 @@ export default async function getGeneratedAIContent(prompt: string) {
         model: 'google/gemini-2.5-flash',
         messages: [
             {
+                role: 'system',
+                content: `You are a helpful assistant that ALWAYS responds in English.
+
+                    CRITICAL RULES:
+                    - You must respond in English only
+                    - Even if the user writes in another language, respond in English
+                    - Translate the user's question to English first, then answer in English
+                    - Never use any language other than English in your responses`
+            }
+            ,
+            {
                 role: 'user',
                 content: prompt,
             },

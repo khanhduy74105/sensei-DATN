@@ -483,9 +483,7 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
         - Preserve original wording when possible
 
         **Resume Text to Parse:**
-        ${resumeExtractedText}
-
-        **Output JSON:**
+        ${resumeExtractedText}**
         `;
 
     const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT);
@@ -649,7 +647,7 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
                     reason: string;
                 }>;
 
-                // skills should only keywords
+                // skills should only keywords, separate combined skills (e.g., "React/Next.js" → ["React", "Next.js"]), maximum 10 most important skills
                 skills?: {
                     current: string[];
                     suggested: string[]; // should remove skills which is unnecessary and add required skills
