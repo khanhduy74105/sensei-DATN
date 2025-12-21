@@ -1,5 +1,6 @@
 "use server"
 
+import { getAppUrl } from "@/lib/getAPpURL";
 import { db } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { auth } from "@clerk/nextjs/server";
@@ -45,7 +46,8 @@ export async function isOutOfBalance() {
             userId: user?.id
         }
     })
-    return !userCredit?.isPaid && userCredit?.balance && userCredit?.balance <= 0;
+
+    return !userCredit?.isPaid && userCredit?.balance === 0;
 }
 
 export async function decreaseBalance() {
@@ -66,6 +68,8 @@ export async function decreaseBalance() {
     const isOutOfBalance = !userCredit?.isPaid && userCredit?.balance && userCredit?.balance <= 0;
 
     if (!isOutOfBalance) {
+        console.log('decrease balance', (userCredit?.balance ?? 1) - 1);
+
         await db.userCredit.update({
             where: {
                 userId: user.id
@@ -108,8 +112,8 @@ export async function createCheckoutSession() {
                 quantity: 1,
             },
         ],
-        success_url: `https://sensei-datn-lmae.vercel.app`,
-        cancel_url: `https://sensei-datn-lmae.vercel.app`,
+        success_url: getAppUrl(),
+        cancel_url: getAppUrl(),
         metadata: {
             userId: user.id, // ⭐⭐⭐ QUAN TRỌNG NHẤT
         },
