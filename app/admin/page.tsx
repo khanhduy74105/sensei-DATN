@@ -1,78 +1,146 @@
-// app/admin/page.tsx
-import { db } from "@/lib/prisma";
-import DashboardStatsClient from "./_components/dashboard-stats.client";
-import { currentUser } from "@clerk/nextjs/server";
+import { isAdmin, getDashboardStats } from "@/actions/admin";
 import { redirect } from "next/navigation";
+import {
+  Users,
+  CreditCard,
+  FileText,
+  MessageSquare,
+  TrendingUp,
+  CheckCircle,
+} from "lucide-react";
 
-export default async function AdminDashboard() {
-  const user = await currentUser();
-  if (user?.publicMetadata.role !== "admin") {
-    redirect("/");
-  }
-  const [
-    totalUsers,
-    totalResume,
-    totalCoverLetter,
-    totalMockInterview,
-    totalAssessments,
-  ] = await Promise.all([
-    db.user.count(),
-    db.resume.count(),
-    db.coverLetter.count(),
-    db.liveMockInterview.count(),
-    db.assessment.count(),
-  ]);
+export default async function AdminDashboardPage() {
+  const admin = await isAdmin();
+  if (!admin) redirect("/");
 
-  const totals = {
-    users: totalUsers,
-    resumes: totalResume,
-    coverLetters: totalCoverLetter,
-    mockInterviews: totalMockInterview,
-    assessments: totalAssessments,
-  };
+  const stats = await getDashboardStats();
 
-  // Lấy data 7 ngày gần nhất cho từng loại
-  const today = new Date();
-  const last7Days = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    return d;
-  });
-
-  // Map mỗi loại -> array 7 ngày với count mỗi ngày
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getDailyCount = async (model: any) => {
-    return Promise.all(
-      last7Days.map(async (date) => {
-        const start = new Date(date);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(date);
-        end.setHours(23, 59, 59, 999);
-        return model.count({ where: { createdAt: { gte: start, lte: end } } });
-      })
-    );
-  };
-
-  const [userData, resumeData, coverData, mockData, assessmentData] =
-    await Promise.all([
-      getDailyCount(db.user),
-      getDailyCount(db.resume),
-      getDailyCount(db.coverLetter),
-      getDailyCount(db.liveMockInterview),
-      getDailyCount(db.assessment),
-    ]);
+  const statCards = [
+    {
+      title: "Total Users",
+      value: stats.totalUsers,
+      icon: Users,
+      color: "text-blue-500",
+    },
+    {
+      title: "Paid Users",
+      value: stats.paidUsers,
+      icon: CheckCircle,
+      color: "text-green-500",
+    },
+    {
+      title: "Total Resumes",
+      value: stats.totalResumes,
+      icon: FileText,
+      color: "text-purple-500",
+    },
+    {
+      title: "Cover Letters",
+      value: stats.totalCoverLetters,
+      icon: MessageSquare,
+      color: "text-orange-500",
+    },
+    {
+      title: "Assessments",
+      value: stats.totalAssessments,
+      icon: TrendingUp,
+      color: "text-pink-500",
+    },
+    {
+      title: "Mock Interviews",
+      value: stats.totalMockInterviews,
+      icon: CreditCard,
+      color: "text-cyan-500",
+    },
+  ];
 
   return (
-    <DashboardStatsClient
-      last7Days={last7Days.map((d) => d.toISOString().slice(5, 10))}
-      totals={totals}
-      data={{
-        users: userData,
-        resumes: resumeData,
-        coverLetters: coverData,
-        mockInterviews: mockData,
-        assessments: assessmentData,
-      }}
-    />
+    <div className="space-y-6 p-6">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+        <p className="text-gray-400">
+          {`Overview of your application's performance`}
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.title}
+              className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-gray-600 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-lg bg-gray-900 ${stat.color}`}>
+                  <Icon size={24} />
+                </div>
+              </div>
+              <h3 className="text-gray-400 text-sm font-medium mb-1">
+                {stat.title}
+              </h3>
+              <p className="text-3xl font-bold text-white">{stat.value}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-xl font-semibold mb-4">Conversion Rate</h3>
+          <div className="flex items-end gap-2">
+            <span className="text-4xl font-bold text-green-500">
+              {stats.conversionRate.toFixed(1)}%
+            </span>
+            <span className="text-gray-400 mb-1">
+              ({stats.paidUsers} / {stats.totalUsers} users)
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-xl font-semibold mb-4">Recent Growth</h3>
+          <div className="flex items-end gap-2">
+            <span className="text-4xl font-bold text-blue-500">
+              {stats.recentUsers}
+            </span>
+            <span className="text-gray-400 mb-1">new users (30 days)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 className="text-xl font-semibold mb-4">Quick Stats</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">
+              {(stats.totalResumes / stats.totalUsers).toFixed(1)}
+            </p>
+            <p className="text-sm text-gray-400">Avg Resumes/User</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">
+              {(stats.totalCoverLetters / stats.totalUsers).toFixed(1)}
+            </p>
+            <p className="text-sm text-gray-400">Avg Cover Letters/User</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">
+              {(stats.totalAssessments / stats.totalUsers).toFixed(1)}
+            </p>
+            <p className="text-sm text-gray-400">Avg Assessments/User</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">
+              {(stats.totalMockInterviews / stats.totalUsers).toFixed(1)}
+            </p>
+            <p className="text-sm text-gray-400">Avg Interviews/User</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

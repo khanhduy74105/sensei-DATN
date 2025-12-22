@@ -10,8 +10,8 @@ export default function Error() {
       <p className="text-gray-600 mb-8">
         Oops! The something wrong with application please try again.
       </p>
-      <Link href="/">
-        <Button>Return Home</Button>
+      <Link href="/admin">
+        <Button>Reload</Button>
       </Link>
     </div>
   );
