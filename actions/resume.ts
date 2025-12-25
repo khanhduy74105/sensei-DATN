@@ -104,20 +104,20 @@ export async function getAllResumes() {
     const { userId } = await auth();
     if (!userId) throw new Error('User not authenticated');
 
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId }
-    });
-    if (!user) throw new Error('User not found');
-
     const resumes = await db.resume.findMany({
         where: {
-            userId: user.id
+            user: {
+                clerkUserId: userId
+            }
         },
         include: {
             educations: true,
             experiences: true,
             projects: true,
             personalInfo: true,
+        },
+        orderBy: {
+            updatedAt: 'desc'
         }
     })
     return resumes as IResumeContent[] | [];

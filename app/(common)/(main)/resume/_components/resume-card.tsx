@@ -1,29 +1,45 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { FileEdit, Trash } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { IResumeContent } from "../types";
 import { useRouter } from "next/navigation";
 import { deleteResume } from "@/actions/resume";
 import { toast } from "sonner";
 import Image from "next/image";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = async () => {
-    if (resume.id) {
-      await deleteResume(resume.id)
-        .then(() => {
-          toast.success("Resume deleted successfully");
-        })
-        .catch((error) => {
-          toast.error(error.message || "Failed to delete resume");
-        })
-        .finally(() => {
-          router.refresh();
-        });
+    if (!resume.id) return;
+
+    setIsDeleting(true);
+    
+    try {
+      await deleteResume(resume.id);
+      toast.success("Resume deleted successfully");
+      setOpen(false);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete resume");
+    } finally {
+      setIsDeleting(false);
     }
   };
+
   return (
     <div className="relative overflow-hidden w-44 h-66 rounded-2xl flex items-center justify-center flex-col gap-2 border border-neutral-200 group cursor-pointer">
       <div className="absolute top-0 right-0 left-0 bottom-0">
@@ -68,15 +84,39 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
           <FileEdit className="w-4 h-4" />
         </Button>
 
-        <Button
-          className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition"
-          size={"icon"}
-          onClick={() => {
-            handleDelete();
-          }}
-        >
-          <Trash className="w-4 h-4" />
-        </Button>
+        {/* Delete Button with Confirm Dialog */}
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button
+              className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition"
+              size={"icon"}
+            >
+              <Trash className="w-4 h-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Resume</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete &quot;{resume.title}&quot;? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline" disabled={isDeleting}>
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button 
+                variant="destructive" 
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

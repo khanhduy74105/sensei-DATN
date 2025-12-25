@@ -18,9 +18,13 @@ import { ILiveQuizQuestion } from "@/types";
 
 interface CollapsibleQuestionProps {
   question: ILiveQuizQuestion;
+  questionNumber: number;
 }
 
-const CollapsibleQuestion = ({ question }: CollapsibleQuestionProps) => {
+const CollapsibleQuestion = ({
+  question,
+  questionNumber,
+}: CollapsibleQuestionProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
@@ -43,7 +47,7 @@ const CollapsibleQuestion = ({ question }: CollapsibleQuestionProps) => {
         >
           <div className="flex flex-col text-left">
             <h4 className={`text-m text-white hover:textbla font-semibold`}>
-              {question.question}
+              {`${questionNumber}. ${question.question}`}
             </h4>
           </div>
 
@@ -103,7 +107,7 @@ const CollapsibleQuestion = ({ question }: CollapsibleQuestionProps) => {
             <div className="text-xs font-medium text-purple-800">Rating</div>
             <div className="mt-1 text-sm text-purple-900">
               {question.rating !== undefined && question.rating !== null
-                ? `${question.rating} / 5`
+                ? `${question.rating} / 10`
                 : "Not rated"}
             </div>
           </div>

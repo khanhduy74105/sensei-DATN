@@ -1,11 +1,13 @@
 "use client";
 import { saveLiveInterviewResult } from "@/actions/interview";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
@@ -51,7 +53,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   const goNext = () => {
     stopRecording(); // Stop recording when changing question
     const nextIndex = selectedIndex + 1;
-    
+
     if (nextIndex >= questions.length) {
       setShowConfirmDialog(true);
     } else {
@@ -88,7 +90,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    
+
     if (!SpeechRecognition) {
       toast.error("Speech recognition is not supported in your browser.");
       return;
@@ -104,13 +106,13 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
       const transcript = Array.from(event.results)
         .map((result) => result[0].transcript)
         .join("");
-      
+
       // Update current transcript
       currentTranscriptRef.current = transcript;
-      
+
       // Use ref to get current index (avoid closure issue)
       const currentIndex = selectedIndexRef.current;
-      
+
       // Update userAnswers state with current index
       setUserAnswers((prev) => {
         const newAnswers = [...prev];
@@ -162,7 +164,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
           newAnswers[currentIndex] = "";
           return newAnswers;
         });
-        
+
         recognitionRef.current?.start();
         setRecording(true);
       } catch (error) {
@@ -245,11 +247,28 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
 
           {/* Selected question content */}
           <div className="mb-5 p-4 rounded-md border border-border bg-muted/50">
-            <div className="flex gap-2 items-center text-sm text-muted-foreground font-medium mb-2">
-              <div className="">{`Q${selectedIndex + 1}`}</div>
-              <Button variant="ghost" size="sm">
-                <AudioLines className="h-4 w-4" />
-              </Button>
+            <div className="flex gap-2 items-center justify-between text-sm text-muted-foreground font-medium mb-2">
+              <div className="flex gap-2 items-center">
+                <div className="">{`Q${selectedIndex + 1}`}</div>
+                <Button variant="ghost" size="sm">
+                  <AudioLines className="h-4 w-4" />
+                </Button>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="link" size="sm">
+                    Hint
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Expected Answer</DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-2 text-base text-foreground">
+                    {questions[selectedIndex]?.correctAnswer}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
             <div className="text-base text-foreground">
               {questions[selectedIndex]?.question}
@@ -271,6 +290,20 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
                 className="w-full min-h-[100px] p-3 text-base text-foreground bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-accent resize-y"
                 placeholder="Your answer will appear here... You can edit it manually."
               />
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => {
+                    const newAnswers = [...userAnswers];
+                    newAnswers[selectedIndex] = "";
+                    setUserAnswers(newAnswers);
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
             </div>
           )}
 
@@ -301,7 +334,9 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         <main className="flex-1 md:1/2 lg:w-3/5 bg-card border border-border rounded-md p-6 flex flex-col items-center shadow-sm">
           <div
             className={`w-full h-80 bg-muted rounded-md flex items-center justify-center border border-dashed border-border transition-all duration-300 relative ${
-              isSoundDetected ? "ring-4 ring-green-500/30 shadow-lg shadow-green-500/20" : ""
+              isSoundDetected
+                ? "ring-4 ring-green-500/30 shadow-lg shadow-green-500/20"
+                : ""
             }`}
           >
             <div className="text-center text-muted-foreground">
@@ -363,13 +398,18 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         >
           {selectedIndex === questions.length - 1 ? "End Interview" : "Next"}
         </Button>
-        <Button
-          onClick={onExit}
-          variant={"destructive"}
-          className="px-4 py-2"
+        <ConfirmDialog
+          title="Exit Interview"
+          description="Are you sure you want to exit? Your progress will not be saved."
+          onConfirm={onExit}
         >
-          Exit
-        </Button>
+          <Button
+            variant={"destructive"}
+            className="px-4 py-2"
+          >
+            Exit
+          </Button>
+        </ConfirmDialog>
       </footer>
     </div>
   );

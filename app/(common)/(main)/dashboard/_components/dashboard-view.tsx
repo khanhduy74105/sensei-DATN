@@ -9,7 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { IndustryInsight } from "@prisma/client";
+import { IndustryInsight, User } from "@prisma/client";
+import { industries } from "@/data/industries";
 
 import {
   BriefcaseIcon,
@@ -29,8 +30,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { format, formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import UpdateInsightForm from "./update-insight-form";
 interface DashBoardViewProps {
   insights: IndustryInsight;
+  user: User;
 }
 
 type SalaryRange = {
@@ -40,7 +50,7 @@ type SalaryRange = {
   median: number;
 };
 
-const DashBoardView = ({ insights }: DashBoardViewProps) => {
+const DashBoardView = ({ insights, user }: DashBoardViewProps) => {
   const salaryData = (insights.salaryRanges as SalaryRange[]).map(
     (range: SalaryRange) => ({
       name: range.role,
@@ -87,6 +97,15 @@ const DashBoardView = ({ insights }: DashBoardViewProps) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <Badge variant="outline">Last updated: {lastUpdatedDate}</Badge>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>Update</Button>
+          </DialogTrigger>
+          <DialogContent className="p-0 rounded-2xl">
+            <DialogTitle className="hidden"></DialogTitle>
+            <UpdateInsightForm industries={industries} user={user} />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Market Overview Cards */}

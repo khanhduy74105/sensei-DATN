@@ -47,7 +47,7 @@ export async function isOutOfBalance() {
         }
     })
 
-    return !userCredit?.isPaid && userCredit?.balance === 0;
+    return !userCredit?.isPaid && (userCredit?.balance || 0) <= 0;
 }
 
 export async function decreaseBalance() {

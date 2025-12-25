@@ -144,7 +144,14 @@ export const AddNewTrigger = () => {
             </div>
             <div className="grid gap-3">
               <Label htmlFor="yoes">Years of experiences</Label>
-              <Input id="yoes" {...register("yoes")} />
+              <Input
+                id="yoes"
+                {...register("yoes")}
+                type="number"
+                placeholder="Years of Experience"
+                min={0}
+                max={50}
+              />
               {errors.yoes && (
                 <p className="text-sm text-red-600">{errors.yoes.message}</p>
               )}

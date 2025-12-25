@@ -40,10 +40,11 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { formatDate } from "@/lib/utils";
 
 export const formatDisplayDate = (dateString: string | undefined) => {
   if (!dateString) return "";
-  return dateString;
+  return formatDate(dateString);
 };
 
 interface EntryFromProps {
@@ -151,7 +152,26 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
 
   const onEdit = (index: number) => {
     setEditingIndex(index);
-    reset(entries?.[index]);
+    console.log("entries", {
+      ...entries?.[index],
+      startDate: entries?.[index]
+        ? formatDisplayDate(entries?.[index].startDate ?? "")
+        : "",
+      endDate: entries?.[index]
+        ? formatDisplayDate(entries?.[index].endDate ?? "")
+        : "",
+    });
+    console.log(entries?.[index]);
+
+    reset({
+      ...entries?.[index],
+      startDate: entries?.[index]
+        ? formatDisplayDate(entries?.[index].startDate ?? "")
+        : "",
+      endDate: entries?.[index]
+        ? formatDisplayDate(entries?.[index].endDate ?? "")
+        : "",
+    });
   };
 
   const EMPTY_FORM = {

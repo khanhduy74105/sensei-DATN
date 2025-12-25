@@ -148,7 +148,7 @@ export async function getAssessments() {
         userId: user.id,
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
     });
     return assessments as IAssessment[];
@@ -355,7 +355,7 @@ export async function getLiveMockInterviews() {
         LiveInterviewQuestion: true,
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
     });
     return mockInterviews.map(

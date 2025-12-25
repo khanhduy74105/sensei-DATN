@@ -102,14 +102,5 @@ export async function getUser() {
     });
     if (!user) throw new Error('User not found');
 
-    try {
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
-
-        return user
-    } catch (error) {
-        console.error('Error checking user:', error);
-        throw new Error('Failed to check user');
-    }
+    return user;
 }

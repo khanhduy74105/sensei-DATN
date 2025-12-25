@@ -8,7 +8,7 @@ const ResumeBuilderPre = ({ resumes }: { resumes: IResumeContent[] }) => {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-bold gradient-title text-5xl md:text-6xl">
-        Resume Builder Premium
+        Resume Builder
       </h1>
       <h3 className="text-xl font-bold">
         Create or upload your resume with advanced features

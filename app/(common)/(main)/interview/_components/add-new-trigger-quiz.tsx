@@ -71,7 +71,7 @@ export const AddNewTrigger = ({
       <DialogContent className="sm:max-w-1/2 p-8">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Tell us more about your job interviwing</DialogTitle>
+            <DialogTitle>Tell us more about your job interviewing</DialogTitle>
             <DialogDescription>
               Add details about your job position/role, Job description and
               years of experience

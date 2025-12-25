@@ -92,7 +92,7 @@ const UploadResumeTrigger = () => {
               <Upload className="h-6 w-6" />
             </div>
             <span className="text-m font-semibold tracking-tight">
-              Enhance Existing resume
+              Upload Existing resume
             </span>
           </div>
         </Button>

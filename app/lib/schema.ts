@@ -107,8 +107,8 @@ export const resumePersonalDataSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email().optional(),
   location: z.string().optional(),
-  linkedin: z.string().url().optional(),
-  website: z.string().url().optional(),
+  linkedin: z.string().optional(),
+  website: z.string().optional(),
 });
 
 /* ----------------------------------------------------

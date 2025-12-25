@@ -23,7 +23,7 @@ import {
 } from "./ui/dropdown-menu";
 import { useUpgradeModal } from "@/contexts/ModalContext";
 import { JsonValue } from "@prisma/client/runtime/library";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function HeaderClient({
   userCredit
@@ -39,6 +39,8 @@ export default function HeaderClient({
   } | null;
 }) {
   const { open, setBalanceLeft, setIsPaid } = useUpgradeModal();
+
+  const [openDropdown, setOpenDropDown] = useState(false)
 
   useEffect(() => {
     setIsPaid(userCredit?.isPaid ?? false);
@@ -75,7 +77,7 @@ export default function HeaderClient({
             </Button>
           </Link>
 
-          <DropdownMenu>
+          <DropdownMenu open={openDropdown} onOpenChange={setOpenDropDown}>
             <DropdownMenuTrigger asChild>
               <Button>
                 <StarsIcon className="h-4 w-4" />
@@ -83,7 +85,9 @@ export default function HeaderClient({
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent onClick={() => {
+              setOpenDropDown(!openDropdown)
+            }}>
               <DropdownMenuItem>
                 <Link href="/resume" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />

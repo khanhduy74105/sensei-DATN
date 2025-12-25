@@ -13,35 +13,72 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { Label } from "recharts";
 import { toast } from "sonner";
 
 const AddNewResumeTrigger = () => {
   const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
   const handleCreateResume = async (title: string) => {
+    // Validate title
+    const trimmedTitle = title.trim();
+    
+    if (!trimmedTitle) {
+      setError("Resume name is required");
+      return;
+    }
+
+    if (trimmedTitle.length < 3) {
+      setError("Resume name must be at least 3 characters");
+      return;
+    }
+
+    if (trimmedTitle.length > 100) {
+      setError("Resume name must be less than 100 characters");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
     try {
-      const resume = await createResume({ title });
+      const resume = await createResume({ title: trimmedTitle });
       if (resume) {
         toast.success("Resume created successfully");
+        setOpen(false);
+        setTitle("");
         router.push(`/resume/${resume?.id}`);
       } else {
         toast.error("Failed to create resume");
       }
     } catch (error) {
-      if (error instanceof Error){
+      if (error instanceof Error) {
         toast.error(error.message);
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      // Reset form khi đóng dialog
+      setTitle("");
+      setError("");
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="secondary"
@@ -59,25 +96,43 @@ const AddNewResumeTrigger = () => {
       </DialogTrigger>
       <DialogOverlay className="fixed inset-0 bg-gray-200/60" />
       <DialogContent className="sm:max-w-1/2 p-8">
-        <form onSubmit={async (e) => {
-          e.preventDefault();
-          const formData = new FormData(e.currentTarget);
-          const title = formData.get("resume-name") as string;
-          await handleCreateResume(title);
-          setOpen(false);
-        }}>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            await handleCreateResume(title);
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Create a resume</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3 mt-4">
-            <Label>Resume name</Label>
-            <Input id="resume-name" placeholder="Enter your resume's name" name="resume-name" />
+            <Label htmlFor="resume-name">Resume name</Label>
+            <Input
+              id="resume-name"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                // Clear error khi user bắt đầu gõ
+                if (error) setError("");
+              }}
+              placeholder="Enter your resume's name"
+              name="resume-name"
+              disabled={isLoading}
+              className={error ? "border-red-500" : ""}
+            />
+            {error && (
+              <p className="text-sm text-red-500 mt-1">{error}</p>
+            )}
           </div>
           <DialogFooter className="pt-2">
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" type="button" disabled={isLoading}>
+                Cancel
+              </Button>
             </DialogClose>
-            <Button type="submit">Create</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Creating..." : "Create"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

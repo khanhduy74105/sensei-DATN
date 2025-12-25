@@ -1,7 +1,7 @@
 import { getIndustryInsight } from "@/actions/dashboard";
-import { getUserOnboardingStatus } from "@/actions/user";
+import { getUser, getUserOnboardingStatus } from "@/actions/user";
 import { redirect } from "next/navigation";
-import { IndustryInsight } from "@prisma/client";
+import { IndustryInsight, User } from "@prisma/client";
 import React from "react";
 import DashBoardView from "./_components/dashboard-view";
 
@@ -11,9 +11,10 @@ const IndustryInsightPage = async () => {
     redirect("/onboarding");
   }
   const insights: IndustryInsight = await getIndustryInsight();
+  const user: User = await getUser();
 
   return <div className="container mx-auto">
-    <DashBoardView insights={insights}/>
+    <DashBoardView insights={insights} user={user}/>
   </div>;
 };
 

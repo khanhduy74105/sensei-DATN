@@ -1,6 +1,4 @@
 import React from "react";
-import CollapsibleQuestion from "../../_components/collapsible-question";
-import { Button } from "@/components/ui/button";
 import { getLiveMockInterviewById } from "@/actions/interview";
 import CollapsibleFeedback from "../../_components/collapsible-feedback";
 
@@ -14,8 +12,7 @@ export default async function Page({ params }: LivePageProps) {
   const { id } = await params;
   const mockInterview = await getLiveMockInterviewById(id);
   const avgRate = Math.round(
-    mockInterview.questions.reduce((sum, q) => sum + (q.rating || 0), 0) /
-      mockInterview.questions.length
+    mockInterview.questions.reduce((sum, q) => sum + (q.rating || 0), 0) / 10
   );
   return (
     <div className="container mx-auto py-6">
@@ -42,7 +39,7 @@ export default async function Page({ params }: LivePageProps) {
         feedback for improvement
       </span>
 
-     <CollapsibleFeedback questions={mockInterview.questions} />
+      <CollapsibleFeedback questions={mockInterview.questions} />
     </div>
   );
 }

@@ -20,7 +20,7 @@ export async function generateLiveQuiz() {
         select: {
             industry: true,
             skills: true,
-        },
+        }
     });
 
     if (!user) throw new Error("User not found");
@@ -143,7 +143,7 @@ export async function getAssessments() {
                 userId: user.id,
             },
             orderBy: {
-                createdAt: "asc",
+                createdAt: "desc",
             },
         });
         return assessments as IAssessment[];

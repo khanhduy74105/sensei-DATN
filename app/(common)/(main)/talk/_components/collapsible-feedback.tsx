@@ -15,8 +15,8 @@ const CollapsibleFeedback = ({
   return (
     <div className="">
       <div className="flex flex-col gap-2 pt-3">
-        {questions.map((q) => (
-          <CollapsibleQuestion key={q.id} question={q} />
+        {questions.map((q, index) => (
+          <CollapsibleQuestion key={q.id} question={q} questionNumber={index + 1} />
         ))}
       </div>
       <div className="mt-2">

@@ -16,8 +16,7 @@ export async function generateCoverLetter(data: Partial<ICoverLetter>) {
     if (!user) throw new Error("User not found");
 
     const prompt = `
-    Write a professional cover letter for a ${data.jobTitle} position at ${data.companyName
-        }.
+    Write a professional cover letter for a ${data.jobTitle} position at ${data.companyName}.
     
     About the candidate:
     - Industry: ${user.industry}
@@ -50,7 +49,7 @@ export async function generateCoverLetter(data: Partial<ICoverLetter>) {
                 jobDescription: data.jobDescription,
                 companyName: data.companyName ?? '',
                 jobTitle: data.jobTitle ?? '',
-                status: "completed",
+                status: "draft",
                 userId: user.id,
             },
         });
@@ -120,7 +119,8 @@ export async function updateCoverLetter(id: string, content: string) {
             userId: user.id,
         },
         data: {
-            content: content
+            content: content,
+            status: "completed",
         }
     });
 }
