@@ -20,7 +20,7 @@ const InterviewedCard = ({
           </CardTitle>
         
           <CardTitle className="text-sm font-medium text-gray-500">
-            Last tried: {interviewData.createdAt.toDateString()}
+            Last tried: {interviewData.updatedAt.toDateString()}
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -19,6 +19,8 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { IResumeEditorContentProps } from "./resume-editor-content";
 import { resumeEducationSchema } from "@/app/lib/schema";
+import { z } from "zod";
+import type { FieldPath } from "react-hook-form";
 
 import {
   Card,
@@ -116,12 +118,15 @@ const ResumeEditorEducation = (props: IResumeEditorContentProps) => {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
+  type EducationForm = z.infer<typeof resumeEducationSchema>;
+
   const {
     register,
+    handleSubmit,
     formState: { errors },
+    setError,
     reset,
-    watch,
-  } = useForm({
+  } = useForm<EducationForm>({
     resolver: zodResolver(resumeEducationSchema),
     defaultValues: {
       institution: "",
@@ -131,8 +136,6 @@ const ResumeEditorEducation = (props: IResumeEditorContentProps) => {
       gpa: "",
     },
   });
-
-  const currentValue = watch();
 
   const handleDelete = (index: number) => {
     const updated = [...(props.formValues.educations || [])];
@@ -145,18 +148,27 @@ const ResumeEditorEducation = (props: IResumeEditorContentProps) => {
     reset(props.formValues.educations?.[index]);
   };
 
-  const handleSubmit = () => {
+  const onSubmitEducation = (data: EducationForm) => {
+    const parsed = resumeEducationSchema.safeParse(data);
+    if (!parsed.success) {
+      parsed.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string | undefined;
+        if (field) setError(field as FieldPath<EducationForm>, { type: "manual", message: issue.message });
+      });
+      return;
+    }
+
     const list = [...(props.formValues.educations || [])];
 
     if (editingIndex !== null) {
       list[editingIndex] = {
         ...list[editingIndex],
-        ...currentValue,
+        ...parsed.data,
       };
     } else {
       list.push({
         id: crypto.randomUUID(),
-        ...currentValue,
+        ...parsed.data,
       });
     }
 
@@ -284,7 +296,7 @@ const ResumeEditorEducation = (props: IResumeEditorContentProps) => {
             Cancel
           </Button>
 
-          <Button type="button" onClick={handleSubmit}>
+          <Button type="button" onClick={handleSubmit(onSubmitEducation)}>
             <PlusCircle className="h-4 w-4 mr-2" />
             {editingIndex !== null ? "Update" : "Add"}
           </Button>

@@ -133,7 +133,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">
-                        {p.name}
+                        {p.name} - {p.type}
                       </h3>
                     </div>
                   </div>

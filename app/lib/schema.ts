@@ -1,4 +1,3 @@
-import { title } from "process";
 import { z } from "zod";
 
 export const onboardingSchema = z.object({
@@ -118,10 +117,10 @@ export const resumePersonalDataSchema = z.object({
 export const resumeEducationSchema = z.object({
   id: z.string().optional(),
   resumeId: z.string().optional(),
-  graduationDate: z.string(),
-  institution: z.string(),
-  degree: z.string(),
-  field: z.string(),
+  graduationDate: z.string().min(1, "Graduation date is required"),
+  institution: z.string().min(1, "Institution is required"),
+  degree: z.string().min(1, "Degree is required"),
+  field: z.string().min(1, "Field of study is required"),
   gpa: z.string().optional(),
 });
 
@@ -165,9 +164,9 @@ export const resumeExperienceSchema = z.union([
 export const resumeProjectSchema = z.object({
   id: z.string().optional(),
   resumeId: z.string().optional(),
-  name: z.string(),
-  description: z.string(),
-  type: z.string(),
+  name: z.string().min(1, "Project name is required"),
+  description: z.string().min(1, "Description is required"),
+  type: z.string().min(1, "Type is required"),
 });
 
 /* ----------------------------------------------------

@@ -38,17 +38,13 @@ export default function HeaderClient({
     metadata: JsonValue;
   } | null;
 }) {
-  const { open, setBalanceLeft, setIsPaid } = useUpgradeModal();
+  const { open, setIsPaid } = useUpgradeModal();
 
   const [openDropdown, setOpenDropDown] = useState(false)
 
   useEffect(() => {
     setIsPaid(userCredit?.isPaid ?? false);
   }, [userCredit?.isPaid, setIsPaid]);
-
-  useEffect(() => {
-    setBalanceLeft(userCredit?.balance ?? 0);
-  }, [userCredit?.balance, setBalanceLeft]);
 
   return (
     <nav className="container mx-auto flex h-16 items-center justify-between px-4">

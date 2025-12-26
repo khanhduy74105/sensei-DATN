@@ -282,7 +282,6 @@ export async function deleteResume(id: string) {
 }
 
 export async function toggleResumePublicStatus(id: string, isPublic: boolean) {
-    console.time('toggle public');
     const { userId } = await auth();
     if (!userId) throw new Error('User not authenticated');
     const user = await db.user.findUnique({
@@ -298,8 +297,6 @@ export async function toggleResumePublicStatus(id: string, isPublic: boolean) {
             isPublic: isPublic
         }
     });
-    console.timeEnd('toggle public');
-
     revalidatePath("/resume");
     return Boolean(updated.id === id);
 };
@@ -374,8 +371,12 @@ export async function improveWithAI({
         const result = await getGeneratedAIContent(prompt);
         return result.response.text().trim();
     } catch (error) {
-        console.error("AI improve fail:", error);
-        throw new Error("Failed to improve content");
+        if (error instanceof Error) {
+            console.error("Error improving resume content:", error.message);
+            const newError = new Error("Failed to improve resume content");
+            newError.name = error.message;
+            throw newError;
+        }
     }
 }
 
@@ -485,24 +486,30 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
         **Resume Text to Parse:**
         ${resumeExtractedText}**
         `;
+    try {
+        const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT);
+        const response = result.response;
+        const text = response.text();
+        const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+        const parsedResume = JSON.parse(cleanedText)
+        const { userId } = await auth();
+        if (!userId) throw new Error('User not authenticated');
 
-    const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT);
-    const response = result.response;
-    const text = response.text();
-    const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
-    const parsedResume = JSON.parse(cleanedText)
-    const { userId } = await auth();
-    if (!userId) throw new Error('User not authenticated');
+        const user = await db.user.findUnique({
+            where: { clerkUserId: userId }
+        });
+        if (!user) throw new Error('User not found');
 
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId }
-    });
-    if (!user) throw new Error('User not found');
+        parsedResume.title = title;
 
-    parsedResume.title = title;
+        const createdResume = await createResume(parsedResume)
+        return createdResume;
 
-    const createdResume = await createResume(parsedResume)
-    return createdResume;
+    } catch (error) {
+        const newError = new Error("Failed to parse resume text");
+        newError.name = (error as Error).message;
+        throw newError;
+    }
 }
 
 export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
@@ -664,5 +671,8 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
         return parsedData as ResumeJDAnalysisResult;
     } catch (error) {
         console.log('Error when analizeMatchingResume', error);
+        const newError = new Error("Failed to analyze resume matching");
+        newError.name = (error as Error).message;
+        throw newError;
     }
 }

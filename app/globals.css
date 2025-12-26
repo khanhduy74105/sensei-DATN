@@ -85,6 +85,13 @@
     body[data-scroll-locked] {
       margin-right: 0 !important;
     }
+    input[type="month"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+
+    input[type="month"]::-webkit-calendar-picker-indicator {
+      filter: brightness(0) invert(1);
+    }
   }
 
 @layer base {

@@ -119,7 +119,7 @@ const ResumeEnhance = ({
           <DialogHeader>
             <DialogTitle>AI analysiser</DialogTitle>
             <DialogDescription>
-              Provide job description for improve your resume
+              Improve your resume to match the job description
             </DialogDescription>
           </DialogHeader>
           {!matchResult ? (
@@ -256,7 +256,7 @@ const ResumeEnhance = ({
                 }
               }}
             >
-              {matchResult ? "Apply" : "Check"}
+              {matchResult ? "Apply" : "Improve"}
             </Button>
           </DialogFooter>
         </DialogContent>

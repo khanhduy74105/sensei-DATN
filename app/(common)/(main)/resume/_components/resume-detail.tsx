@@ -41,6 +41,7 @@ import { Input } from "@/components/ui/input";
 import ResumeEnhance from "./resume-enhance";
 import useFetch from "@/hooks/use-fetch";
 import { SuggestionStatus } from "./field-suggestion";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 const stepOrder: KeyOfITemplateData[] = [
   KeyOfITemplateData.personalInfo,
@@ -73,6 +74,7 @@ export default function ResumeBuilderDetailPage({
     control,
     register,
     watch,
+    reset,
     setValue,
     formState: { errors },
   } = useForm<ITemplateData>({
@@ -95,11 +97,6 @@ export default function ResumeBuilderDetailPage({
 
   const onSubmit = async (data: Partial<IResumeContent>) => {
     setLoading(true);
-
-    console.log("data update resume", {
-      ...initialData,
-      ...data,
-    });
 
     try {
       await updateResumeContent(initialData.id, {
@@ -162,6 +159,7 @@ export default function ResumeBuilderDetailPage({
       toast.info("Sharing is not supported in this browser.");
     }
   };
+
   const onDownload = () => {
     window.print();
   };
@@ -175,8 +173,6 @@ export default function ResumeBuilderDetailPage({
   const onApplyEnhance = (
     appliedContents: Record<string, SuggestionStatus>
   ) => {
-    console.log('on apply change', appliedContents);
-    
     Object.keys(appliedContents).forEach((key) => {
       switch (key) {
         case "summary":
@@ -187,7 +183,10 @@ export default function ResumeBuilderDetailPage({
           );
           break;
         case "skills":
-          setValue("skills", analyedMatchingResume.fieldSuggestions.skills.suggested);
+          setValue(
+            "skills",
+            analyedMatchingResume.fieldSuggestions.skills.suggested
+          );
           break;
         default:
           if (key.startsWith("exp")) {
@@ -393,7 +392,24 @@ export default function ResumeBuilderDetailPage({
                 />
               </CardContent>
             </Card>
-            <div className="p-4">
+            <div className="p-4 flex gap-2 justify-end">
+              <ConfirmDialog
+                title="Discard Changes"
+                description="Are you sure you want to discard all changes? This action cannot be undone."
+                confirmText="Discard"
+                variant="destructive"
+                onConfirm={() => {
+                  reset();
+                }}
+              >
+                <Button
+                  className="rounded-b-md"
+                  variant="secondary"
+                  color="red"
+                >
+                  Discard
+                </Button>
+              </ConfirmDialog>
               <Button
                 className="rounded-b-md"
                 variant="secondary"

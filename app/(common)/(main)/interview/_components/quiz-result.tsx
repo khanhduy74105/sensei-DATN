@@ -65,10 +65,16 @@ export default function QuizResult({
         </div>
       </CardContent>
 
-      {!hideStartNew && (
+      {!hideStartNew ? (
         <CardFooter>
           <Button onClick={onStartNew} className="w-full">
             Start New Quiz
+          </Button>
+        </CardFooter>
+      ) : (
+        <CardFooter>
+          <Button onClick={onStartNew} className="w-full">
+            Retry Quiz
           </Button>
         </CardFooter>
       )}

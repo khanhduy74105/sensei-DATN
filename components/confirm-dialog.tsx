@@ -80,7 +80,7 @@ export function ConfirmDialog({
             disabled={isDisabled}
             className={
               variant === "destructive"
-                ? "bg-red-500 hover:bg-red-600"
+                ? "bg-red-400 hover:bg-red-500"
                 : ""
             }
           >

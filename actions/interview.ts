@@ -5,6 +5,7 @@ import { IAssessment, ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
+import { th } from "zod/v4/locales";
 
 interface QuizQuestion {
   question: string;
@@ -58,7 +59,9 @@ export async function generateQuiz(entry?: { role: string; skills: string[] }) {
     return quiz.questions;
   } catch (error) {
     console.error("Error generating quiz:", error);
-    throw new Error("Failed to generate quiz questions");
+    const newError = new Error("Failed to generate quiz questions");
+    newError.name = (error as Error).message;
+    throw newError
   }
 }
 
@@ -110,7 +113,9 @@ export async function saveQuizResult(questions: QuizQuestion[], answers: string[
       improvementTip = tipResult.response.text().trim();
     } catch (error) {
       console.error("Error generating improvement tip:", error);
-      // Continue without improvement tip if generation fails
+      const newError = new Error("Failed to generate improvement tip");
+      newError.name = (error as Error).message;
+      throw newError
     }
   }
 
@@ -193,7 +198,9 @@ export async function generateInterviewQuestions({ role, description, yoes }: { 
     return quiz.questions;
   } catch (error) {
     console.error("Error generating quiz:", error);
-    throw new Error("Failed to generate quiz questions");
+    const newError = new Error("Failed to generate quiz questions");
+    newError.name = (error as Error).message;
+    throw newError;
   }
 }
 
@@ -326,16 +333,27 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
           data: {
             feedback: q.feedback,
             rating: q.rating,
-            userAnswer: q.userAnswer
+            userAnswer: q.userAnswer,
           },
         });
       })
     );
+    await db.liveMockInterview.update({
+      where: {
+        id: mockInterview.id,
+        userId: user.id,
+      },
+      data: {
+        updatedAt: new Date(),
+      },
+    });
 
     return savedQuestions;
   } catch (error) {
     console.error("Error generating interview feedback:", error);
-    throw new Error("Failed to generate interview feedback");
+    const newError = new Error("Failed to generate interview feedback");
+    newError.name = (error as Error).message;
+    throw newError;
   }
 }
 
@@ -355,7 +373,7 @@ export async function getLiveMockInterviews() {
         LiveInterviewQuestion: true,
       },
       orderBy: {
-        createdAt: "desc",
+        updatedAt: "desc",
       },
     });
     return mockInterviews.map(

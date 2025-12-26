@@ -83,7 +83,7 @@ export async function decreaseBalance() {
 }
 
 
-export async function createCheckoutSession() {
+export async function createCheckoutSession(pathName: string) {
     const { userId } = await auth();
 
     if (!userId) {
@@ -112,8 +112,8 @@ export async function createCheckoutSession() {
                 quantity: 1,
             },
         ],
-        success_url: getAppUrl(),
-        cancel_url: getAppUrl(),
+        success_url: `${getAppUrl()}${pathName}`,
+        cancel_url: `${getAppUrl()}${pathName}`,
         metadata: {
             userId: user.id, // ⭐⭐⭐ QUAN TRỌNG NHẤT
         },

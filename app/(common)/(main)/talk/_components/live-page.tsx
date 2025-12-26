@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useUpgradeModal } from "@/contexts/ModalContext";
 import { ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import { AudioLines, Camera, CheckCircle, LightbulbIcon } from "lucide-react";
@@ -32,6 +33,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const currentTranscriptRef = useRef<string>("");
   const selectedIndexRef = useRef<number>(0); // Track current index
+  const { open } = useUpgradeModal();
 
   const router = useRouter();
 
@@ -83,6 +85,12 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
       router.push(`/talk/${mockInterview.id}/feedback`);
     } catch (error) {
       toast.error("Failed to save interview results.");
+      if (error instanceof Error) {
+        if (error.name === "OUT_OF_BALANCE") {
+          open();
+          toast.error("Insufficient credit balance. Please upgrade your plan.");
+        }
+      }
     }
   };
 
@@ -403,10 +411,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
           description="Are you sure you want to exit? Your progress will not be saved."
           onConfirm={onExit}
         >
-          <Button
-            variant={"destructive"}
-            className="px-4 py-2"
-          >
+          <Button variant={"destructive"} className="px-4 py-2">
             Exit
           </Button>
         </ConfirmDialog>

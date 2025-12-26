@@ -9,8 +9,6 @@ type UpgradeModalContextType = {
   isOpen: boolean;
   isPaid: boolean;
   setIsPaid: (paid: boolean) => void;
-  balanceLeft: number;
-  setBalanceLeft: (n: number) => void;
   userId: string;
   setUserId: (u: string) => void;
 };
@@ -32,8 +30,6 @@ export function UpgradeModalProvider({ children }: { children: ReactNode }) {
         isOpen: isOpen,
         isPaid,
         setIsPaid,
-        balanceLeft,
-        setBalanceLeft,
         userId,
         setUserId,
       }}

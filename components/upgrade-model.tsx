@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import useFetch from "@/hooks/use-fetch";
 import { getUserCredit } from "@/actions/payment";
 import { useEffect } from "react";
-import { useUpgradeModal } from "@/contexts/ModalContext";
 import PaymentButton from "./payment-button";
 
 export function UpgradeModal({
@@ -22,19 +21,12 @@ export function UpgradeModal({
 }) {
   const { data, fn } = useFetch(getUserCredit);
 
-  const { userId } = useUpgradeModal();
-
   useEffect(() => {
     if (open) {
       fn();
     }
   }, [open]);
 
-  const onClickPayment = () => {
-    const billingUrl = `https://buy.stripe.com/test_3cI00jcZi9Dc2cgh246Ri00?userId=${userId}`;
-    console.log('billingUrl', billingUrl);
-    
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,7 +47,7 @@ export function UpgradeModal({
             <span className="text-gray-400 text-sm mb-1">forever</span>
           </div>
           <span className="text-xs text-gray-500 mt-1">
-            Cancel anytime • No hidden fees
+            No hidden fees
           </span>
         </div>
 
@@ -83,7 +75,6 @@ export function UpgradeModal({
         {/* Benefits */}
         <ul className="mt-5 space-y-2 text-sm text-gray-300">
           <li>✅ Unlimited AI requests</li>
-          <li>✅ Faster responses</li>
           <li>✅ Priority feature access</li>
           <li>✅ Premium templates & tools</li>
         </ul>

@@ -35,7 +35,7 @@ export const generateIndustryInsight = inngest.createFunction(
             `;
 
             const result = await step.ai.wrap("openrouter-ai", async (p) => {
-                const response = await getGeneratedAIContent(p);
+                const response = await getGeneratedAIContent(p, true);
                 
                 return response.response.text() || "";
             }, prompt);

@@ -39,7 +39,7 @@ export const genarateAIIsignts = async (
     Include at least 5 skills and trends.
   `;
 
-  const result = await getGeneratedAIContent(prompt);
+  const result = await getGeneratedAIContent(prompt, true);
   const response = result.response;
   const text = response.text();
   const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();

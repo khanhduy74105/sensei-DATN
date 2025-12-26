@@ -5,10 +5,12 @@ const openRouter = new OpenRouter({
     apiKey: process.env.OPENROUTER_KEY
 });
 
-export default async function getGeneratedAIContent(prompt: string) {
-    const outOfBalance = await isOutOfBalance();
-    if (outOfBalance) {
-        throw Error('OUT_OF_BALANCE')
+export default async function getGeneratedAIContent(prompt: string, pass_balance?: boolean) {
+    if (!pass_balance) {
+        const outOfBalance = await isOutOfBalance();
+        if (outOfBalance) {
+            throw new Error('OUT_OF_BALANCE')
+        }
     }
     const completion = await openRouter.chat.send({
         model: 'google/gemini-2.5-flash',
@@ -33,9 +35,9 @@ export default async function getGeneratedAIContent(prompt: string) {
         ],
         stream: false,
     });
-
-    await decreaseBalance()
-
+    if (!pass_balance) {
+        await decreaseBalance();
+    }
     return {
         response: {
             text: () => (completion.choices[0].message.content as string)

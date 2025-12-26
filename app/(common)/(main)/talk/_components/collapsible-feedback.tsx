@@ -22,7 +22,7 @@ const CollapsibleFeedback = ({
       <div className="mt-2">
         <Button
           onClick={() => {
-            router.back();
+            router.replace('/talk');
           }}
         >
           Back

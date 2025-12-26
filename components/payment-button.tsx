@@ -2,13 +2,16 @@ import React, { useTransition } from "react";
 import { Button } from "./ui/button";
 import { createCheckoutSession } from "@/actions/payment";
 import { toast } from "sonner";
+import { log } from "node:console";
+import { usePathname } from "next/navigation";
 
 const PaymentButton = () => {
   const [pending, startTransition] = useTransition();
+  const pathname = usePathname();
 
   const onClickPayment = () => {
     startTransition(() => {
-      createCheckoutSession()
+      createCheckoutSession(pathname)
         .then((response) => {
           if (response) {
             window.location.href = response;

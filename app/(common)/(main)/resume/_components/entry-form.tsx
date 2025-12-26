@@ -419,7 +419,7 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
               Cancel
             </Button>
             <Button type="button" onClick={handleAdd}>
-              <PlusCircle className="h-4 w-4 mr-2" />
+              <PlusCircle className=" mr-2" />
               {editingIndex !== null ? "Update" : "Add"}
             </Button>
           </CardFooter>

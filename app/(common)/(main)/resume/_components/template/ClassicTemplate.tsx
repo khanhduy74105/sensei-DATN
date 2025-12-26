@@ -97,7 +97,7 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
                         {data.projects.map((proj, index) => (
                             <div key={index} className="flex justify-between items-start border-l-3 border-gray-300 pl-6">
                                 <div className="max-w-full">
-                                    <li className="font-semibold text-gray-800 ">{proj.name}</li>
+                                    <li className="font-semibold text-gray-800 ">{proj.name} - {proj.type}</li>
                                     <p className="text-gray-600 max-w-full text-ellipsis overflow-hidden">{proj.description}</p>
                                 </div>
                             </div>

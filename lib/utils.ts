@@ -8,5 +8,5 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(dateStr: string) {
     if (!dateStr) return "";
     const [year, month] = dateStr.split("-").map(part => parseInt(part.trim()));
-    return `${year}-${month}`;
+    return `${year}-${month.toString().padStart(2, '0')}`;
 }

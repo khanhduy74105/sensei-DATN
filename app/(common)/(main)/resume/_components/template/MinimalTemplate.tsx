@@ -87,7 +87,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
                 key={index}
                 className="max-w-full flex flex-col gap-2 justify-between items-baseline"
               >
-                <h3 className="text-lg font-medium ">{proj.name}</h3>
+                <h3 className="text-lg font-medium ">{proj.name} - {proj.type}</h3>
                 <p className="text-gray-600 max-w-full text-ellipsis overflow-hidden">{proj.description}</p>
               </div>
             ))}

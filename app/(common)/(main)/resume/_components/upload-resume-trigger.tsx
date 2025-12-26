@@ -13,6 +13,7 @@ import {
   DialogOverlay,
   DialogTitle,
 } from "@/components/ui/dialog";
+import useFetch from "@/hooks/use-fetch";
 import { Upload, FileText, X, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState, useRef } from "react";
@@ -20,7 +21,6 @@ import { toast } from "sonner";
 
 const UploadResumeTrigger = () => {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [resumeTitle, setResumeTitle] = useState("");
   const [extractedText, setExtractedText] = useState("");
@@ -28,6 +28,12 @@ const UploadResumeTrigger = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
+
+  const {
+    fn: convertExtractedTextToResumeDataFn,
+    loading: converting,
+    data: resumeData,
+  } = useFetch(convertExtractedTextToResumeData);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -40,7 +46,6 @@ const UploadResumeTrigger = () => {
 
     setFile(selectedFile);
     setIsProcessing(true);
-
     try {
       const { default: pdfToText } = await import("react-pdftotext");
       const text = await pdfToText(selectedFile);
@@ -64,21 +69,14 @@ const UploadResumeTrigger = () => {
   };
 
   const onNextStep = async () => {
-    setLoading(true);
-    try {
-      const resume = await convertExtractedTextToResumeData(
-        resumeTitle,
-        extractedText
-      );
-      if (resume) {
-        router.push(`/resume/${resume?.id}`);
-      }
-      toast.success("Created extracted resume!");
-    } catch (error) {
-      toast.error("Error when extracted resume, please try again");
-    }
-    setLoading(false);
+    await convertExtractedTextToResumeDataFn(resumeTitle, extractedText);
   };
+
+  React.useEffect(() => {
+    if (resumeData) {
+      router.push(`/resume/edit/${resumeData.id}`);
+    }
+  }, [resumeData, router]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -185,7 +183,7 @@ const UploadResumeTrigger = () => {
             }}
           >
             Continue
-            {loading && <Loader2 />}
+            {converting && <Loader2 />}
           </Button>
         </DialogFooter>
       </DialogContent>

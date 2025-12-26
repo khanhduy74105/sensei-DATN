@@ -1,3 +1,4 @@
+import { useUpgradeModal } from "@/contexts/ModalContext";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +11,7 @@ function useFetch<TArgs extends unknown[] = unknown[]>(
   const [data, setData] = useState<any>(undefined);
   const [loading, setLoading] = useState<boolean | null>(null);
   const [error, setError] = useState<Error | null>(null);
-
+  const { open } = useUpgradeModal();
   const fn = async (...args: TArgs) => {
     setLoading(true);
     setError(null);
@@ -21,9 +22,13 @@ function useFetch<TArgs extends unknown[] = unknown[]>(
       setData(response);
       setError(null);
     } catch (error) {
-      console.error('Error in useFetch:', error);
       setError(error as Error);
-      toast.error((error as Error).message);
+      if ((error as Error).name === 'OUT_OF_BALANCE') {
+        open();
+        toast.error("Insufficient credit balance. Please upgrade your plan.");
+      } else {
+        toast.error((error as Error).message);
+      }
     } finally {
       setLoading(false);
     }

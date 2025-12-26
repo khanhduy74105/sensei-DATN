@@ -89,7 +89,8 @@ export default function QuizList({ assessments }: QuizListProps) {
           <QuizResult
             result={selectedQuiz!}
             hideStartNew
-            onStartNew={() => router.push("/interview/mock")}
+            onStartNew={() => {
+            }}
           />
         </DialogContent>
       </Dialog>

@@ -14,16 +14,21 @@ import { Button } from "@/components/ui/button";
 import { X, PlusCircle, Pencil } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resumeProjectSchema } from "@/app/lib/schema";
+import { z } from "zod";
+import type { FieldPath } from "react-hook-form";
 
 const ResumeEditorProject = (props: IResumeEditorContentProps) => {
   const type = "projects";
 
+  type ProjectForm = z.infer<typeof resumeProjectSchema>;
+
   const {
     register,
+    handleSubmit,
     formState: { errors },
+    setError,
     reset,
-    watch,
-  } = useForm({
+  } = useForm<ProjectForm>({
     resolver: zodResolver(resumeProjectSchema),
     defaultValues: {
       name: "",
@@ -31,8 +36,6 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
       description: "",
     },
   });
-
-  const currentValue = watch();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const handleDelete = (index: number) => {
@@ -43,6 +46,37 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
   const handleEdit = (index: number) => {
     setEditingIndex(index);
     reset(props.formValues.projects?.[index]);
+  };
+
+  const onSubmitProject = (data: ProjectForm) => {
+    const parsed = resumeProjectSchema.safeParse(data);
+    if (!parsed.success) {
+      // map zod errors to react-hook-form
+      parsed.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string | undefined;
+        if (field) setError(field as FieldPath<ProjectForm>, { type: "manual", message: issue.message });
+      });
+      return;
+    }
+
+    const list = [...(props.formValues.projects || [])];
+
+    if (editingIndex !== null) {
+      list[editingIndex] = {
+        ...list[editingIndex],
+        ...parsed.data,
+      };
+    } else {
+      list.push({
+        id: crypto.randomUUID(),
+        ...parsed.data,
+      });
+    }
+
+    props.setValue("projects", list);
+
+    reset({ name: "", type: "", description: "" });
+    setEditingIndex(null);
   };
 
   return (
@@ -91,7 +125,9 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Add {type}</CardTitle>
+            <CardTitle>
+              {editingIndex !== null ? "Edit project" : `Add ${type}`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -135,34 +171,19 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
               type="button"
               variant="outline"
               onClick={() => {
-                reset();
+                reset({ name: "", type: "", description: "" });
+                setEditingIndex(null);
               }}
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                props.setValue("projects", [
-                  ...(props.formValues.projects || []),
-                  {
-                    id: crypto.randomUUID(),
-                    ...currentValue,
-                  },
-                ]);
-                reset();
-              }}
-            >
+            <Button type="button" onClick={handleSubmit(onSubmitProject)}>
               <PlusCircle className="h-4 w-4 mr-2" />
-              Add Entry
+              {editingIndex !== null ? "Update" : "Add Entry"}
             </Button>
           </CardFooter>
         </Card>
 
-        <Button className="w-full" variant="outline">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Add {type}
-        </Button>
       </div>
     </div>
   );
