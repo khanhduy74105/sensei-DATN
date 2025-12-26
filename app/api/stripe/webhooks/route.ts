@@ -43,14 +43,14 @@ export async function POST(req: Request) {
                 }
 
                 console.log('User ID', userId);
-                
+
 
                 const currentCredit = await db.userCredit.findUnique({
                     where: {
                         userId: userId
                     }
                 })
-                
+
                 if (currentCredit) {
                     await db.userCredit.update({
                         where: {
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
                         }
                     })
                 } else {
-                    db.userCredit.create({
+                    await db.userCredit.create({
                         data: {
                             userId: userId,
                             balance: 9999,
@@ -75,6 +75,45 @@ export async function POST(req: Request) {
                 break;
             }
 
+            case "payment_intent.succeeded": {
+                const paymentIntent = event.data.object as Stripe.PaymentIntent;
+                const clerkUserId = paymentIntent.metadata?.userId;
+
+                if (!clerkUserId) {
+                    return new Response("Missing userId", { status: 400 });
+                }
+
+                const user = await db.user.findUnique({
+                    where: { clerkUserId: clerkUserId }
+                });
+
+                if (!user) {
+                    return new Response("User not found", { status: 404 });
+                }
+
+                const internalUserId = user.id;
+
+                const currentCredit = await db.userCredit.findUnique({
+                    where: { userId: internalUserId }
+                });
+
+                if (currentCredit) {
+                    await db.userCredit.update({
+                        where: { userId: internalUserId },
+                        data: { isPaid: true }
+                    });
+                } else {
+                    await db.userCredit.create({
+                        data: {
+                            userId: internalUserId,
+                            balance: 9999,
+                            isPaid: true
+                        }
+                    });
+                }
+
+                break;
+            }
             default:
                 console.log(`ℹ️ Unhandled event: ${event.type}`);
         }
