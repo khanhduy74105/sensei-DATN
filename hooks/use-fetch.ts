@@ -19,17 +19,17 @@ function useFetch<TArgs extends unknown[] = unknown[]>(
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = (await cb(...args)) as any;
+
+      if (!response.success && response?.error === 'OUT_OF_BALANCE') {
+        open();
+        toast.error("Insufficient credit balance. Please upgrade your plan.");
+        return;
+      }
       setData(response);
       setError(null);
     } catch (error) {
       setError(error as Error);
-      console.log('Error in useFetch', error);
-      if ((error as Error).name === 'OUT_OF_BALANCE') {
-        open();
-        toast.error("Insufficient credit balance. Please upgrade your plan.");
-      } else {
-        toast.error((error as Error).message);
-      }
+      toast.error((error as Error).message);
     } finally {
       setLoading(false);
     }

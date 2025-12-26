@@ -31,51 +31,28 @@ export async function getUserCredit() {
     return userCredit;
 }
 
-export async function isOutOfBalance() {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
-
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId },
-    });
-    if (!user) {
-        throw new Error("Can not found user");
-    }
-    const userCredit = await db.userCredit.findFirst({
-        where: {
-            userId: user?.id
-        }
-    })
-
-    return !userCredit?.isPaid && (userCredit?.balance || 0) <= 0;
-}
-
 export async function decreaseBalance() {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
     const user = await db.user.findUnique({
         where: { clerkUserId: userId },
+        include: { UserCredit: true },
     });
 
     if (!user) throw new Error("User not found");
 
-    const userCredit = await db.userCredit.findFirst({
-        where: {
-            userId: user.id
-        }
-    })
-    const isOutOfBalance = !userCredit?.isPaid && userCredit?.balance && userCredit?.balance <= 0;
+
+
+    const isOutOfBalance = !user.UserCredit?.isPaid && (user.UserCredit?.balance === 0 || user.UserCredit?.balance === null);
 
     if (!isOutOfBalance) {
-        console.log('decrease balance', (userCredit?.balance ?? 1) - 1);
-
         await db.userCredit.update({
             where: {
                 userId: user.id
             },
             data: {
-                balance: (userCredit?.balance ?? 1) - 1
+                balance: (user.UserCredit?.balance ?? 1) - 1
             }
         })
     }

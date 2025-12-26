@@ -1,4 +1,4 @@
-import { decreaseBalance, isOutOfBalance } from '@/actions/payment';
+import { decreaseBalance } from '@/actions/payment';
 import { OpenRouter } from '@openrouter/sdk';
 
 const openRouter = new OpenRouter({
@@ -6,12 +6,6 @@ const openRouter = new OpenRouter({
 });
 
 export default async function getGeneratedAIContent(prompt: string, pass_balance?: boolean) {
-    if (!pass_balance) {
-        const outOfBalance = await isOutOfBalance();
-        if (outOfBalance) {
-            throw new Error('OUT_OF_BALANCE')
-        }
-    }
     const completion = await openRouter.chat.send({
         model: 'google/gemini-2.5-flash',
         messages: [

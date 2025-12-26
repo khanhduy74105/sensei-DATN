@@ -74,7 +74,7 @@ const UploadResumeTrigger = () => {
 
   React.useEffect(() => {
     if (resumeData) {
-      router.push(`/resume/edit/${resumeData.id}`);
+      router.push(`/resume/${resumeData.id}`);
     }
   }, [resumeData, router]);
 

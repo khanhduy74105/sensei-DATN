@@ -5,7 +5,7 @@ import { IAssessment, ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
-import { th } from "zod/v4/locales";
+import { redirect } from "next/navigation";
 
 interface QuizQuestion {
   question: string;
@@ -23,10 +23,19 @@ export async function generateQuiz(entry?: { role: string; skills: string[] }) {
     select: {
       industry: true,
       skills: true,
+      UserCredit: true,
     },
   });
 
   if (!user) throw new Error("User not found");
+
+  if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+    return {
+      success: false,
+      error: "OUT_OF_BALANCE",
+    }
+  }
+
   let prompt = entry ?
     `Generate 10 technical interview questions for a ${entry.role} professional ${entry.skills?.length ? ` with expertise in ${entry.skills.join(", ")}` : ""}`
     : `Generate 10 technical interview questions for a ${user.industry
@@ -71,10 +80,17 @@ export async function saveQuizResult(questions: QuizQuestion[], answers: string[
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
+    include: { UserCredit: true },
   });
 
   if (!user) throw new Error("User not found");
 
+  if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+    return {
+      success: false,
+      error: "OUT_OF_BALANCE",
+    }
+  }
   const questionResults = questions.map((q, index) => ({
     question: q.question,
     answer: q.correctAnswer,
@@ -169,9 +185,17 @@ export async function generateInterviewQuestions({ role, description, yoes }: { 
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
+    include: { UserCredit: true },
   });
 
   if (!user) throw new Error("User not found");
+
+  if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+    return {
+      success: false,
+      error: "OUT_OF_BALANCE",
+    }
+  }
   const prompt = `
     Act as a technical interviewer. 
     Generate 5 professional interview questions for the position: ${role}, 
@@ -282,8 +306,17 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
   if (!userId) throw new Error("Unauthorized");
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
+    include: { UserCredit: true },
   });
+
   if (!user) throw new Error("User not found");
+
+  if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+    return {
+      success: false,
+      error: "OUT_OF_BALANCE",
+    }
+  }
 
   try {
     const prompt = `
@@ -325,10 +358,9 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
 
     const savedQuestions = await Promise.all(
       feedbackData.questions.map(async (q: Partial<ILiveQuizQuestion>) => {
-        await db.liveInterviewQuestion.updateMany({
+        return await db.liveInterviewQuestion.update({
           where: {
             id: q.id,
-            liveMockInterviewId: mockInterview.id,
           },
           data: {
             feedback: q.feedback,
@@ -338,6 +370,7 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
         });
       })
     );
+
     await db.liveMockInterview.update({
       where: {
         id: mockInterview.id,
@@ -347,7 +380,7 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
         updatedAt: new Date(),
       },
     });
-
+    
     return savedQuestions;
   } catch (error) {
     console.error("Error generating interview feedback:", error);

@@ -344,9 +344,17 @@ export async function improveWithAI({
 
     const user = await db.user.findUnique({
         where: { clerkUserId: userId },
+        include: { UserCredit: true },
     });
 
     if (!user) throw new Error("User not found");
+
+    if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+        return {
+            success: false,
+            error: "OUT_OF_BALANCE",
+        }
+    }
 
     const basePrompt = `
         You are a professional resume writer specializing in ATS-optimized content for ${user.industry} professionals.
@@ -487,7 +495,7 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
         ${resumeExtractedText}**
         `;
     try {
-        const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT);
+        const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT, true);
         const response = result.response;
         const text = response.text();
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
@@ -518,9 +526,17 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
 
     const user = await db.user.findUnique({
         where: { clerkUserId: userId },
+        include: { UserCredit: true },
     });
 
     if (!user) throw new Error("User not found");
+
+    if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+        return {
+            success: false,
+            error: "OUT_OF_BALANCE",
+        }
+    }
     try {
         const prompt = `
         You are an expert Applicant Tracking System (ATS) and senior technical recruiter.

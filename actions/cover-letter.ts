@@ -11,9 +11,17 @@ export async function generateCoverLetter(data: Partial<ICoverLetter>) {
 
     const user = await db.user.findUnique({
         where: { clerkUserId: userId },
+        include: { UserCredit: true },
     });
 
     if (!user) throw new Error("User not found");
+
+    if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+        return {
+            success: false,
+            error: "OUT_OF_BALANCE",
+        }
+    }
 
     const prompt = `
     Write a professional cover letter for a ${data.jobTitle} position at ${data.companyName}.

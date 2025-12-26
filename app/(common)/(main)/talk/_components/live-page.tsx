@@ -10,9 +10,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useUpgradeModal } from "@/contexts/ModalContext";
+import useFetch from "@/hooks/use-fetch";
 import { ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
-import { AudioLines, Camera, CheckCircle, LightbulbIcon } from "lucide-react";
+import { AudioLines, Camera, CheckCircle, LightbulbIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -34,6 +35,12 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   const currentTranscriptRef = useRef<string>("");
   const selectedIndexRef = useRef<number>(0); // Track current index
   const { open } = useUpgradeModal();
+
+  const {
+    fn: saveLiveInterviewResultFn,
+    loading: savingLiveInterviewResult,
+    data: liveInterviewResultData,
+  } = useFetch(saveLiveInterviewResult);
 
   const router = useRouter();
 
@@ -64,13 +71,19 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
     }
   };
 
+  useEffect(() => {
+    if (liveInterviewResultData) {
+      toast.success("Interview results saved successfully!");
+      router.push(`/talk/${mockInterview.id}/feedback`);
+    }
+  }, [liveInterviewResultData]);
+
   const onExit = () => {
     stopRecording();
     router.push("/talk");
   };
 
   const onSubmitAnswers = async () => {
-    setShowConfirmDialog(false);
     const results = questions.map((q, idx) => ({
       ...q,
       userAnswer: userAnswers[idx],
@@ -80,18 +93,11 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
       questions: results,
     };
     try {
-      await saveLiveInterviewResult(mockInterviewResults);
-      toast.success("Interview results saved successfully!");
-      router.push(`/talk/${mockInterview.id}/feedback`);
+      await saveLiveInterviewResultFn(mockInterviewResults);
     } catch (error) {
       toast.error("Failed to save interview results.");
-      if (error instanceof Error) {
-        if (error.name === "OUT_OF_BALANCE") {
-          open();
-          toast.error("Insufficient credit balance. Please upgrade your plan.");
-        }
-      }
     }
+    setShowConfirmDialog(false);
   };
 
   // Initialize speech recognition
@@ -213,7 +219,10 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
             >
               Cancel
             </Button>
-            <Button onClick={onSubmitAnswers}>Submit</Button>
+            <Button onClick={onSubmitAnswers} disabled={savingLiveInterviewResult || undefined}>
+              {savingLiveInterviewResult ? <Loader2 className="animate-spin" /> : null}
+              {savingLiveInterviewResult ? 'Checking' : 'Submit'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
