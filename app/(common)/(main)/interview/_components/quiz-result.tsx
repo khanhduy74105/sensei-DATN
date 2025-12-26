@@ -1,20 +1,30 @@
 "use client";
 
 import { Trophy, CheckCircle2, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { IAssessment, IQuizResult } from "@/types";
+import { AddNewTrigger } from "./add-new-trigger-quiz";
+import { User } from "@prisma/client";
 
 interface QuizResultProps {
   result: IAssessment | IQuizResult;
   hideStartNew?: boolean;
-  onStartNew: () => void;
+  onStartNew?: (
+    entry?:
+      | {
+          role: string;
+          skills: string[];
+        }
+      | undefined
+  ) => Promise<void>;
+  user?: User;
 }
 export default function QuizResult({
   result,
   hideStartNew = false,
   onStartNew,
+  user,
 }: QuizResultProps) {
   if (!result) return null;
   return (
@@ -65,17 +75,9 @@ export default function QuizResult({
         </div>
       </CardContent>
 
-      {!hideStartNew ? (
+      {!hideStartNew && onStartNew && user && (
         <CardFooter>
-          <Button onClick={onStartNew} className="w-full">
-            Start New Quiz
-          </Button>
-        </CardFooter>
-      ) : (
-        <CardFooter>
-          <Button onClick={onStartNew} className="w-full">
-            Retry Quiz
-          </Button>
+          <AddNewTrigger onClick={onStartNew} user={user} />
         </CardFooter>
       )}
     </div>

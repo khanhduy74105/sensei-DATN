@@ -17,8 +17,9 @@ import { BarLoader } from "react-spinners";
 import { toast } from "sonner";
 import QuizResult from "./quiz-result";
 import { AddNewTrigger } from "./add-new-trigger-quiz";
+import { User } from "@prisma/client";
 
-const Quiz = () => {
+const Quiz = ({ user }: { user: User }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -35,7 +36,6 @@ const Quiz = () => {
     data: resultData,
     setData: setResultData,
   } = useFetch(saveQuizResult);
-
 
   useEffect(() => {
     if (quizData) {
@@ -82,11 +82,18 @@ const Quiz = () => {
     }
   };
 
-  const startNewQuiz = () => {
+  const startNewQuiz = async (
+    entry?:
+      | {
+          role: string;
+          skills: string[];
+        }
+      | undefined
+  ) => {
     setCurrentQuestion(0);
     setAnswers([]);
     setShowExplanation(false);
-    generateQuizFn();
+    generateQuizFn(entry);
     setResultData(null);
   };
 
@@ -97,7 +104,7 @@ const Quiz = () => {
   if (resultData) {
     return (
       <div className="">
-        <QuizResult result={resultData} onStartNew={startNewQuiz} />
+        <QuizResult result={resultData} onStartNew={startNewQuiz} user={user} />
       </div>
     );
   }
@@ -115,12 +122,7 @@ const Quiz = () => {
           </p>
         </CardContent>
         <CardFooter>
-          <Button onClick={() => {
-            generateQuizFn()
-          }} className="w-1/2">
-            Start Quiz
-          </Button>
-          <AddNewTrigger onClick={generateQuizFn}/>
+          <AddNewTrigger onClick={generateQuizFn} user={user} />
         </CardFooter>
       </Card>
     );

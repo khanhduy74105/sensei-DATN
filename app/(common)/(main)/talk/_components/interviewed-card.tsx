@@ -16,7 +16,7 @@ const InterviewedCard = ({
       <Card>
         <CardHeader className="flex flex-col items-start gap-2">
           <CardTitle className="text-xl font-bold">
-            {interviewData.role}
+            Mock: {interviewData.role} interview
           </CardTitle>
         
           <CardTitle className="text-sm font-medium text-gray-500">

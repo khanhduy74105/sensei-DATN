@@ -24,10 +24,13 @@ import { useForm } from "react-hook-form";
 // ...existing code...
 // ...existing code...
 import { toast } from "sonner";
+import { User } from "@prisma/client";
+import { toCapitalCase } from "@/app/lib/helper";
 // ...existing code...
 
 export const AddNewTrigger = ({
   onClick,
+  user,
 }: {
   onClick: (
     entry?:
@@ -37,6 +40,7 @@ export const AddNewTrigger = ({
         }
       | undefined
   ) => Promise<void>;
+  user: User;
 }) => {
   const [open, setOpen] = React.useState(false);
 
@@ -46,6 +50,12 @@ export const AddNewTrigger = ({
     formState: { errors },
   } = useForm({
     resolver: zodResolver(quizInterviewSchema),
+    defaultValues: {
+      role: toCapitalCase(
+        user.industry?.split("---")[1].replaceAll("-", " ") || ""
+      ),
+      skills: user.skills.join(", "),
+    },
   });
 
   const onSubmit = async (data: { role: string; skills?: string[] }) => {
@@ -65,7 +75,7 @@ export const AddNewTrigger = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-1/2 ml-2">Start your specific interview</Button>
+        <Button className="w-full ml-2">Start your specific interview</Button>
       </DialogTrigger>
       <DialogOverlay className="fixed inset-0 bg-gray-200/60" />
       <DialogContent className="sm:max-w-1/2 p-8">
@@ -91,7 +101,11 @@ export const AddNewTrigger = ({
             </div>
             <div className="grid gap-3">
               <Label htmlFor="skills">Skills</Label>
-              <Input id="skills" {...register("skills")} />
+              <Input
+                id="skills"
+                {...register("skills")}
+                placeholder="Skills you wanna practice"
+              />
               {errors.skills && (
                 <p className="text-sm text-red-600">{errors.skills.message}</p>
               )}

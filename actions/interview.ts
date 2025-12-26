@@ -5,7 +5,6 @@ import { IAssessment, ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
-import { redirect } from "next/navigation";
 
 interface QuizQuestion {
   question: string;

@@ -8,8 +8,7 @@ import {
   Eye,
   EyeOff,
   Link,
-  Loader2,
-  StarsIcon,
+  Loader2
 } from "lucide-react";
 import React, { useState } from "react";
 import ResumeEditorHeader from "./resume-editor-header";
@@ -18,7 +17,6 @@ import {
   IResumeContent,
   ITemplateData,
   KeyOfITemplateData,
-  ResumeJDAnalysisResult,
   TemplateTypes,
 } from "../types";
 import { Progress } from "@/components/ui/progress";

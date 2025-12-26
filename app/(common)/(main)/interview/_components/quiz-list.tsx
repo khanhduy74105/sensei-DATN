@@ -56,7 +56,7 @@ export default function QuizList({ assessments }: QuizListProps) {
               >
                 <CardHeader>
                   <CardTitle className="gradient-title text-2xl">
-                    Quiz {i + 1}
+                    Quiz {assessments.length - i}
                   </CardTitle>
                   <CardDescription className="flex justify-between w-full">
                     <div>Score: {assessment.quizScore.toFixed(1)}%</div>
@@ -89,8 +89,6 @@ export default function QuizList({ assessments }: QuizListProps) {
           <QuizResult
             result={selectedQuiz!}
             hideStartNew
-            onStartNew={() => {
-            }}
           />
         </DialogContent>
       </Dialog>
