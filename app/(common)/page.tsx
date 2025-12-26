@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/accordion";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { checkUser } from "@/lib/checkUser";
 
 export default async function Home() {
+  await checkUser();
   const user = await currentUser();
   if (user?.publicMetadata.role === "admin") {
     redirect("/admin");
