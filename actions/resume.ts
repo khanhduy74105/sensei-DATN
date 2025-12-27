@@ -169,9 +169,7 @@ export async function getResumePublicById(id: string) {
     return resume as IResumeContent | null;
 }
 
-export const updateResumeContent = async (id: string, data: IResumeContent) => {
-    console.time("action");
-
+export const updateResumeContent = async (id: string, data: Partial<IResumeContent>) => {
     const {
         content,
         atsScore,
@@ -250,9 +248,7 @@ export const updateResumeContent = async (id: string, data: IResumeContent) => {
         }
     });
 
-    console.timeEnd("action");
-
-    revalidatePath("/resume");
+    revalidatePath(`/resume/${id}`);
 
     return { success: true };
 };
@@ -302,14 +298,6 @@ export async function toggleResumePublicStatus(id: string, isPublic: boolean) {
 };
 
 export async function uploadImage(file: Blob): Promise<string> {
-    const { userId } = await auth();
-    if (!userId) throw new Error('User not authenticated');
-
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId }
-    });
-    if (!user) throw new Error('User not found');
-
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", process.env.CLDNR_UPLOAD_PRESET!);

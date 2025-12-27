@@ -152,17 +152,6 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
 
   const onEdit = (index: number) => {
     setEditingIndex(index);
-    console.log("entries", {
-      ...entries?.[index],
-      startDate: entries?.[index]
-        ? formatDisplayDate(entries?.[index].startDate ?? "")
-        : "",
-      endDate: entries?.[index]
-        ? formatDisplayDate(entries?.[index].endDate ?? "")
-        : "",
-    });
-    console.log(entries?.[index]);
-
     reset({
       ...entries?.[index],
       startDate: entries?.[index]
@@ -399,6 +388,10 @@ export function EntryForm({ type, entries, onChange }: EntryFromProps) {
                 </>
               )}
             </Button>
+            <p className="text-xs text-gray-500 max-w-4/5 mx-auto text-center mt-2">
+              Tip: Keep it concise (3-4 sentences) and focus on your most
+              relevant achievements and skills.
+            </p>
           </CardContent>
           <CardFooter className="flex justify-end space-x-2">
             <Button

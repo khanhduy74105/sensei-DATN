@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import {
   Eye,
   EyeOff,
   Link,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import React, { useState } from "react";
 import ResumeEditorHeader from "./resume-editor-header";
@@ -21,7 +22,7 @@ import {
 } from "../types";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { useForm } from "react-hook-form";
+import { Path, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { templateDataSchema } from "@/app/lib/schema";
 import ClassicTemplate from "./template/ClassicTemplate";
@@ -33,6 +34,7 @@ import {
   analyzeMatchingResume,
   toggleResumePublicStatus,
   updateResumeContent,
+  uploadImage,
 } from "@/actions/resume";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -40,6 +42,7 @@ import ResumeEnhance from "./resume-enhance";
 import useFetch from "@/hooks/use-fetch";
 import { SuggestionStatus } from "./field-suggestion";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { generateThumbnail } from "@/app/lib/savePdf";
 
 const stepOrder: KeyOfITemplateData[] = [
   KeyOfITemplateData.personalInfo,
@@ -74,7 +77,7 @@ export default function ResumeBuilderDetailPage({
     watch,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty, dirtyFields },
   } = useForm<ITemplateData>({
     resolver: zodResolver(templateDataSchema),
     defaultValues: {
@@ -95,11 +98,25 @@ export default function ResumeBuilderDetailPage({
 
   const onSubmit = async (data: Partial<IResumeContent>) => {
     setLoading(true);
-
+    const json = initialData.json ? JSON.parse(initialData.json) : {};
     try {
       await updateResumeContent(initialData.id, {
         ...initialData,
         ...data,
+        json: JSON.stringify(json),
+      });
+      reset({
+        ...initialData,
+        title: data.title || "",
+        isPublic: data.isPublic || false,
+        accentColor: data.accentColor || "blue",
+        template: data.template || "classic",
+        personalInfo: data.personalInfo || {},
+        professional_summary: data.professional_summary || "",
+        experiences: data.experiences || [],
+        educations: data.educations || [],
+        projects: data.projects || [],
+        skills: data.skills || [],
       });
       toast.success("Resume updated successfully");
     } catch (error) {
@@ -108,8 +125,33 @@ export default function ResumeBuilderDetailPage({
         toast.error(error.message || "Failed to generate cover letter");
       }
     }
+    generateThumbnailBackground();
     setLoading(false);
+    router.refresh();
   };
+
+  const generateThumbnailBackground = async () => {
+    try {
+      const json = initialData.json ? JSON.parse(initialData.json) : {};
+
+      const thumbnailResult = await generateThumbnail("resume-preview", {
+        format: "jpeg",
+        quality: 0.75
+      });
+
+      if (thumbnailResult.success && thumbnailResult.blob) {
+        const thumbnailUrl = await uploadImage(thumbnailResult.blob);
+        json.thumbnail = thumbnailUrl;
+
+        await updateResumeContent(initialData.id, {
+          json: JSON.stringify(json),
+        });
+      }
+    } catch (error) {
+      console.error("Background thumbnail generation failed:", error);
+    }
+  };
+
   const goPrevious = () => {
     if (currentIndex > 0) {
       setFieldStep(stepOrder[currentIndex - 1]);
@@ -158,8 +200,8 @@ export default function ResumeBuilderDetailPage({
     }
   };
 
-  const onDownload = () => {
-    window.print();
+  const onDownload = async () => {
+    // window.print();
   };
 
   const {
@@ -168,20 +210,27 @@ export default function ResumeBuilderDetailPage({
     data: analyedMatchingResume,
   } = useFetch(analyzeMatchingResume);
 
+  const setValueDirty = <K extends Path<ITemplateData>>(
+    field: K,
+    value: any
+  ) => {
+    setValue(field, value, { shouldDirty: true, shouldTouch: true });
+  };
+
   const onApplyEnhance = (
     appliedContents: Record<string, SuggestionStatus>
   ) => {
     Object.keys(appliedContents).forEach((key) => {
       switch (key) {
         case "summary":
-          setValue(
+          setValueDirty(
             "professional_summary",
             analyedMatchingResume.fieldSuggestions.professional_summary
               .suggested
           );
           break;
         case "skills":
-          setValue(
+          setValueDirty(
             "skills",
             analyedMatchingResume.fieldSuggestions.skills.suggested
           );
@@ -196,7 +245,7 @@ export default function ResumeBuilderDetailPage({
               ...analyedMatchingResume.fieldSuggestions.experiences?.[index]
                 ?.suggested,
             };
-            setValue("experiences", newExperiencies);
+            setValueDirty("experiences", newExperiencies);
           } else if (key.startsWith("edu")) {
             const [_, idx] = key.split("-");
             const newEdus = formValues.educations ?? [];
@@ -207,7 +256,7 @@ export default function ResumeBuilderDetailPage({
                 ?.suggested,
             };
 
-            setValue("educations", newEdus);
+            setValueDirty("educations", newEdus);
           } else if (key.startsWith("project")) {
             const [_, idx] = key.split("-");
             const newProjects = formValues.projects ?? [];
@@ -217,7 +266,7 @@ export default function ResumeBuilderDetailPage({
               ...analyedMatchingResume.fieldSuggestions.projects?.[index]
                 ?.suggested,
             };
-            setValue("projects", newProjects);
+            setValueDirty("projects", newProjects);
           }
           break;
       }
@@ -307,7 +356,7 @@ export default function ResumeBuilderDetailPage({
               <Input
                 value={formValues.title}
                 onChange={(e) => {
-                  setValue("title", e.target.value);
+                  setValueDirty("title", e.target.value);
                 }}
                 className="text-lg"
               />
@@ -384,30 +433,32 @@ export default function ResumeBuilderDetailPage({
                   fieldStep={fieldStep}
                   register={register}
                   control={control}
-                  setValue={setValue}
+                  setValue={setValueDirty}
                   formValues={formValues}
                   errors={errors}
                 />
               </CardContent>
             </Card>
             <div className="p-4 flex gap-2 justify-end">
-              <ConfirmDialog
-                title="Discard Changes"
-                description="Are you sure you want to discard all changes? This action cannot be undone."
-                confirmText="Discard"
-                variant="destructive"
-                onConfirm={() => {
-                  reset();
-                }}
-              >
-                <Button
-                  className="rounded-b-md"
-                  variant="secondary"
-                  color="red"
+              {isDirty && (
+                <ConfirmDialog
+                  title="Discard Changes"
+                  description="Are you sure you want to discard all changes? This action cannot be undone."
+                  confirmText="Discard"
+                  variant="destructive"
+                  onConfirm={() => {
+                    reset();
+                  }}
                 >
-                  Discard
-                </Button>
-              </ConfirmDialog>
+                  <Button
+                    className="rounded-b-md"
+                    variant="secondary"
+                    color="red"
+                  >
+                    Discard
+                  </Button>
+                </ConfirmDialog>
+              )}
               <Button
                 className="rounded-b-md"
                 variant="secondary"
@@ -423,7 +474,7 @@ export default function ResumeBuilderDetailPage({
           </div>
         </div>
 
-        <div id="resume-review" className=" flex-1 min-w-[400px]">
+        <div id="resume-preview" className=" flex-1 min-w-[400px]">
           {previewContent}
         </div>
       </div>

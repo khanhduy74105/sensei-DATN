@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { IResumeEditorContentProps } from "./resume-editor-content";
 import {
@@ -11,11 +11,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { X, PlusCircle, Pencil } from "lucide-react";
+import { X, PlusCircle, Pencil, Sparkles, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resumeProjectSchema } from "@/app/lib/schema";
 import { z } from "zod";
 import type { FieldPath } from "react-hook-form";
+import useFetch from "@/hooks/use-fetch";
+import { improveWithAI } from "@/actions/resume";
+import { toast } from "sonner";
 
 const ResumeEditorProject = (props: IResumeEditorContentProps) => {
   const type = "projects";
@@ -26,8 +29,10 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
     setError,
     reset,
+    setValue,
   } = useForm<ProjectForm>({
     resolver: zodResolver(resumeProjectSchema),
     defaultValues: {
@@ -37,6 +42,25 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
     },
   });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const {
+    loading: isImproving,
+    fn: improveWithAIFn,
+    data: improvedContent,
+    error: improveError,
+  } = useFetch(improveWithAI);
+
+  const formValues = watch();
+
+  // Add this effect to handle the improvement result
+  useEffect(() => {
+    if (improvedContent && !isImproving) {
+      setValue("description", improvedContent);
+      toast.success("Description improved successfully!");
+    }
+    if (improveError) {
+      toast.error(improveError.message || "Failed to improve description");
+    }
+  }, [improvedContent, improveError, isImproving, setValue]);
 
   const handleDelete = (index: number) => {
     const newEntries = props.formValues.projects?.filter((_, i) => i !== index);
@@ -54,7 +78,11 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
       // map zod errors to react-hook-form
       parsed.error.issues.forEach((issue) => {
         const field = issue.path[0] as string | undefined;
-        if (field) setError(field as FieldPath<ProjectForm>, { type: "manual", message: issue.message });
+        if (field)
+          setError(field as FieldPath<ProjectForm>, {
+            type: "manual",
+            message: issue.message,
+          });
       });
       return;
     }
@@ -77,6 +105,19 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
 
     reset({ name: "", type: "", description: "" });
     setEditingIndex(null);
+  };
+
+  const handleImproveDescription = async () => {
+    const description = formValues.description;
+    if (!description) {
+      toast.error("Please enter a description first");
+      return;
+    }
+
+    await improveWithAIFn({
+      current: description,
+      type: "professional summary",
+    });
   };
 
   return (
@@ -165,6 +206,31 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
                 </p>
               )}
             </div>
+            <Button
+              className="mt-2"
+              type="button"
+              variant="ghost"
+              size="sm"
+              color="purple"
+              onClick={handleImproveDescription}
+              disabled={isImproving || !formValues.description}
+            >
+              {isImproving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Improving...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Improve with AI
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-gray-500 max-w-4/5 mx-auto text-center mt-2">
+              Tip: Keep it concise (3-4 sentences) and focus on your most
+              relevant achievements and skills.
+            </p>
           </CardContent>
           <CardFooter className="flex justify-end space-x-2">
             <Button
@@ -183,7 +249,6 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
             </Button>
           </CardFooter>
         </Card>
-
       </div>
     </div>
   );

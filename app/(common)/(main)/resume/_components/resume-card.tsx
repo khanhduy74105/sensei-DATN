@@ -27,14 +27,16 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
     if (!resume.id) return;
 
     setIsDeleting(true);
-    
+
     try {
       await deleteResume(resume.id);
       toast.success("Resume deleted successfully");
       setOpen(false);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete resume");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete resume"
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -44,20 +46,21 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
     <div className="relative overflow-hidden w-44 h-66 rounded-2xl flex items-center justify-center flex-col gap-2 border border-neutral-200 group cursor-pointer">
       <div className="absolute top-0 right-0 left-0 bottom-0">
         <Image
-          src="/resume.png"
+          src={JSON.parse(resume.json || "{}").thumbnail || "/resume.png"}
           width={176}
           height={264}
           alt="resume"
-          className="w-full h-full shadow-2xl border mx-auto"
+          className="w-full h-full shadow-2xl border mx-auto bg-cover"
           priority
         />
       </div>
       <div className="absolute right-0 left-0 bottom-0 py-4 bg-black/50 flex flex-col items-center justify-center text-white bg-opacity-70 rounded-b-2xl p-2">
-        <div className="flex flex-col flex-auto items-center justify-center">
-          <span className="text-sm overflow-ellipsis">{resume.title}</span>
-        </div>
+        <p className="text-sm overflow-hidden overflow-ellipsis">
+          {resume.title}
+        </p>
 
         <span className="text-xs">
+          Last changed:{" "}
           {resume.updatedAt.toLocaleDateString(undefined, {
             year: "numeric",
             month: "short",
@@ -98,7 +101,8 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
             <DialogHeader>
               <DialogTitle>Delete Resume</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete &quot;{resume.title}&quot;? This action cannot be undone.
+                Are you sure you want to delete &quot;{resume.title}&quot;? This
+                action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -107,8 +111,8 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
                   Cancel
                 </Button>
               </DialogClose>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
