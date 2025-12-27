@@ -38,6 +38,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import UpdateInsightForm from "./update-insight-form";
+import { parseIndustryLabel } from "@/app/lib/helper";
 interface DashBoardViewProps {
   insights: IndustryInsight;
   user: User;
@@ -107,6 +108,8 @@ const DashBoardView = ({ insights, user }: DashBoardViewProps) => {
           </DialogContent>
         </Dialog>
       </div>
+
+      <div className="mr-2 text-m font-medium">Insight about {parseIndustryLabel(user.industry ?? '', industries)}</div>
 
       {/* Market Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

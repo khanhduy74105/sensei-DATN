@@ -26,7 +26,7 @@ import { JsonValue } from "@prisma/client/runtime/library";
 import { useEffect, useState } from "react";
 
 export default function HeaderClient({
-  userCredit
+  userCredit,
 }: {
   userCredit: {
     id: string;
@@ -38,9 +38,9 @@ export default function HeaderClient({
     metadata: JsonValue;
   } | null;
 }) {
-  const { open, setIsPaid } = useUpgradeModal();
+  const { open, setIsPaid, isPaid } = useUpgradeModal();
 
-  const [openDropdown, setOpenDropDown] = useState(false)
+  const [openDropdown, setOpenDropDown] = useState(false);
 
   useEffect(() => {
     setIsPaid(userCredit?.isPaid ?? false);
@@ -81,13 +81,28 @@ export default function HeaderClient({
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent onClick={() => {
-              setOpenDropDown(!openDropdown)
-            }}>
+            <DropdownMenuContent
+              onClick={() => {
+                setOpenDropDown(!openDropdown);
+              }}
+            >
               <DropdownMenuItem>
                 <Link href="/resume" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Build resume
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem>
+                <Link href="/interview" className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4" />
+                  Interview Preparation
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/talk" className="flex items-center gap-2">
+                  <Camera className="h-4 w-4" />
+                  Mock interview
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
@@ -97,18 +112,6 @@ export default function HeaderClient({
                 >
                   <PenBox className="h-4 w-4" />
                   Cover letter
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href="/interview" className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4" />
-                  Interview Prep
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href="/talk" className="flex items-center gap-2">
-                  <Camera className="h-4 w-4" />
-                  Mock interview
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

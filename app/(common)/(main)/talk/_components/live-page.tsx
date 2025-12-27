@@ -13,7 +13,13 @@ import { useUpgradeModal } from "@/contexts/ModalContext";
 import useFetch from "@/hooks/use-fetch";
 import { ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
-import { AudioLines, Camera, CheckCircle, LightbulbIcon, Loader2 } from "lucide-react";
+import {
+  AudioLines,
+  Camera,
+  CheckCircle,
+  LightbulbIcon,
+  Loader2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -34,7 +40,6 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const currentTranscriptRef = useRef<string>("");
   const selectedIndexRef = useRef<number>(0); // Track current index
-  const { open } = useUpgradeModal();
 
   const {
     fn: saveLiveInterviewResultFn,
@@ -219,14 +224,26 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
             >
               Cancel
             </Button>
-            <Button onClick={onSubmitAnswers} disabled={savingLiveInterviewResult || undefined}>
-              {savingLiveInterviewResult ? <Loader2 className="animate-spin" /> : null}
-              {savingLiveInterviewResult ? 'Checking' : 'Submit'}
+            <Button
+              onClick={onSubmitAnswers}
+              disabled={savingLiveInterviewResult || undefined}
+            >
+              {savingLiveInterviewResult ? (
+                <Loader2 className="animate-spin" />
+              ) : null}
+              {savingLiveInterviewResult ? "Checking" : "Submit"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
+      <div className="">
+        <h2 className="text-2xl font-bold">
+          Live Mock Interview: {mockInterview.role}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Question about: {mockInterview.description}
+        </p>
+      </div>
       <div className="flex-1 flex gap-6">
         <aside className="w-full md:w-1/2 lg:w-2/5 bg-card border border-border rounded-md p-6 flex flex-col shadow-sm">
           {/* Badges */}
