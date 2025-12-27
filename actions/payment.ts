@@ -42,9 +42,12 @@ export async function decreaseBalance() {
 
     if (!user) throw new Error("User not found");
 
-
-
-    const isOutOfBalance = !user.UserCredit?.isPaid && (user.UserCredit?.balance === 0 || user.UserCredit?.balance === null);
+    const isOutOfBalance =
+        !user.UserCredit?.isPaid &&
+        (
+            user.UserCredit?.balance == null ||
+            user.UserCredit?.balance <= 0
+        );
 
     if (!isOutOfBalance) {
         await db.userCredit.update({
@@ -52,7 +55,7 @@ export async function decreaseBalance() {
                 userId: user.id
             },
             data: {
-                balance: (user.UserCredit?.balance ?? 1) - 1
+                balance: Math.max(0, (user.UserCredit?.balance ?? 1) - 1)
             }
         })
     }
