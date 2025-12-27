@@ -64,7 +64,7 @@ export async function POST(req: Request) {
                     await db.userCredit.create({
                         data: {
                             userId: userId,
-                            balance: 9999,
+                            balance: 10,
                             isPaid: true
                         }
                     })
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
                     await db.userCredit.create({
                         data: {
                             userId: internalUserId,
-                            balance: 9999,
+                            balance: 10,
                             isPaid: true
                         }
                     });
