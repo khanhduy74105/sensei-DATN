@@ -74,3 +74,24 @@ export async function getIndustryInsight() {
 
   return user.industryInsight;
 } 
+
+export async function getHeroStats() {
+  const [
+    industriesCount,
+    mockInterviewCount,
+    quizCount,
+    questionCount,
+  ] = await Promise.all([
+    db.industryInsight.count(),
+    db.liveMockInterview.count(),
+    db.assessment.count(),
+    db.liveInterviewQuestion.count(),
+  ]);
+
+  return {
+    industriesCount,
+    mockInterviewCount,
+    quizCount,
+    questionCount,
+  };
+}

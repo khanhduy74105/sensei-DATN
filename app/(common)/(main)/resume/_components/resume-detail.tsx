@@ -214,7 +214,7 @@ export default function ResumeBuilderDetailPage({
     field: K,
     value: any
   ) => {
-    setValue(field, value, { shouldDirty: true, shouldTouch: true });
+    setValue(field, value, { shouldDirty: true});
   };
 
   const onApplyEnhance = (

@@ -9,7 +9,7 @@ import useFetch from "@/hooks/use-fetch";
 import { toast } from "sonner";
 
 const ResumeEditorProfessionalSummary = (props: IResumeEditorContentProps) => {
-  const { control, formValues,setValue } = props;
+  const { control, formValues, setValue } = props;
   const {
     loading: isImproving,
     fn: improveWithAIFn,
@@ -26,7 +26,7 @@ const ResumeEditorProfessionalSummary = (props: IResumeEditorContentProps) => {
     if (improveError) {
       toast.error(improveError.message || "Failed to improve summary");
     }
-  }, [improvedContent, improveError, isImproving, setValue]);
+  }, [improvedContent, improveError, isImproving]);
 
   // Replace handleImproveDescription with this
   const handleImproveDescription = async () => {
