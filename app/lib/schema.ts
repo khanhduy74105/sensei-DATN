@@ -86,7 +86,8 @@ export const quizInterviewSchema = z.object({
         .map((skill) => skill.trim())
         .filter(Boolean)
       : []
-  )
+  ),
+  yoes: z.string("Years of experience is required"),
 });
 
 

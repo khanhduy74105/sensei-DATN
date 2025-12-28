@@ -116,7 +116,7 @@ const ResumeEditorProject = (props: IResumeEditorContentProps) => {
 
     await improveWithAIFn({
       current: description,
-      type: "professional summary",
+      type: "project description",
     });
   };
 

@@ -176,13 +176,13 @@
   #main-header, #resume-title, #resume-editor, #resume-actions {
     display: none;
   }
-  #resume-review,
-  #resume-review * {
+  #resume-preview,
+  #resume-preview * {
     visibility: visible;
   }
 
   /* Đặt resume lên đầu trang in */
-  /* #resume-review {
+  /* #resume-preview {
     position: absolute;
     top: 0;
     left: 0;

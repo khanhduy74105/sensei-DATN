@@ -25,7 +25,7 @@ const PaymentButton = () => {
       className="flex-1 bg-white text-black hover:bg-gray-200 font-semibold"
       onClick={onClickPayment}
     >
-      Upgrade for $9.99
+      Purchase
     </Button>
   );
 };

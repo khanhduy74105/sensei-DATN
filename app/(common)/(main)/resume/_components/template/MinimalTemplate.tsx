@@ -35,7 +35,11 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
       {/* Professional Summary */}
       {data.professional_summary && (
         <section className="mb-10">
-          <p className=" text-gray-700">{data.professional_summary}</p>
+           <ul className="text-gray-700 leading-relaxed whitespace-pre-line">
+            {data.professional_summary.split("\n").map((line, index) => (
+                <li key={index}>{line}</li>
+            ))}
+          </ul>
         </section>
       )}
 

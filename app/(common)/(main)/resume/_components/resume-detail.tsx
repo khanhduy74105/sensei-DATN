@@ -201,7 +201,7 @@ export default function ResumeBuilderDetailPage({
   };
 
   const onDownload = async () => {
-    // window.print();
+    window.print();
   };
 
   const {

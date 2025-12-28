@@ -55,7 +55,7 @@ const ResumeCard = ({ resume }: { resume: IResumeContent }) => {
         />
       </div>
       <div className="absolute right-0 left-0 bottom-0 py-4 bg-black/50 flex flex-col items-center justify-center text-white bg-opacity-70 rounded-b-2xl p-2">
-        <p className="text-sm overflow-hidden overflow-ellipsis">
+        <p className="max-w-full text-sm overflow-hidden overflow-ellipsis">
           {resume.title}
         </p>
 

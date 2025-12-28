@@ -87,6 +87,7 @@ const Quiz = ({ user }: { user: User }) => {
       | {
           role: string;
           skills: string[];
+          yoes: string;
         }
       | undefined
   ) => {

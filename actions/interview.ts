@@ -13,7 +13,7 @@ interface QuizQuestion {
   explanation: string;
 }
 
-export async function generateQuiz(entry?: { role: string; skills: string[] }) {
+export async function generateQuiz(entry?: { role: string; skills: string[], yoes: string }) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -36,7 +36,7 @@ export async function generateQuiz(entry?: { role: string; skills: string[] }) {
   }
 
   let prompt = entry ?
-    `Generate 10 technical interview questions for a ${entry.role} professional ${entry.skills?.length ? ` with expertise in ${entry.skills.join(", ")}` : ""}`
+    `Generate 10 technical interview questions for a ${entry.role} with ${entry.yoes} years of experience ${entry.skills?.length ? ` with expertise in ${entry.skills.join(", ")}` : ""}`
     : `Generate 10 technical interview questions for a ${user.industry
     } professional${user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""}.`
 
@@ -200,9 +200,11 @@ export async function generateInterviewQuestions({ role, description, yoes }: { 
     Generate 5 professional interview questions for the position: ${role}, 
     with the job description: ${description}, 
     and the candidate's years of experience: ${yoes}.
+
     Requirements:
     - Questions must be clear and concise.
     - Focus on practical skills and real-world project experience.
+    
     Return the response in this JSON format only, no additional text:
     {
       "questions": [
@@ -379,7 +381,7 @@ export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview)
         updatedAt: new Date(),
       },
     });
-    
+
     return savedQuestions;
   } catch (error) {
     console.error("Error generating interview feedback:", error);

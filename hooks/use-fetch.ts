@@ -23,6 +23,7 @@ function useFetch<TArgs extends unknown[] = unknown[]>(
       if (!response.success && response?.error === 'OUT_OF_BALANCE') {
         open();
         toast.error("Insufficient credit balance. Please upgrade your plan.");
+        setData(null);
         return;
       }
       setData(response);

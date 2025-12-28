@@ -74,7 +74,11 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
             <h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
               Professional Summary
             </h2>
-            <p className="text-gray-700 ">{data.professional_summary}</p>
+            <ul className="text-gray-700 leading-relaxed whitespace-pre-line">
+              {data.professional_summary.split("\n").map((line, index) => (
+                <li key={index}>{line}</li>
+              ))}
+            </ul>
           </section>
         )}
 

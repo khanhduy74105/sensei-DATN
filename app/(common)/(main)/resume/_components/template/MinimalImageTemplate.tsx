@@ -145,9 +145,11 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
               >
                 SUMMARY
               </h2>
-              <p className="text-zinc-700 leading-relaxed">
-                {data.professional_summary}
-              </p>
+              <ul className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {data.professional_summary.split("\n").map((line, index) => (
+                  <li key={index}>{line}</li>
+                ))}
+              </ul>
             </section>
           )}
 

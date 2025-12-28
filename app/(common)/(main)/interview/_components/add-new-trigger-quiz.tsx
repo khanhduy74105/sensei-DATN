@@ -37,6 +37,7 @@ export const AddNewTrigger = ({
       | {
           role: string;
           skills: string[];
+          yoes: string;
         }
       | undefined
   ) => Promise<void>;
@@ -55,10 +56,15 @@ export const AddNewTrigger = ({
         user.industry?.split("---")[1].replaceAll("-", " ") || ""
       ),
       skills: user.skills.join(", "),
+      yoes: (user.experience || 0).toString(),
     },
   });
 
-  const onSubmit = async (data: { role: string; skills?: string[] }) => {
+  const onSubmit = async (data: {
+    role: string;
+    skills?: string[];
+    yoes: string;
+  }) => {
     try {
       const entry = {
         ...data,
@@ -75,13 +81,15 @@ export const AddNewTrigger = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full ml-2">Start your specific interview</Button>
+        <Button className="w-full ml-2">Start new quiz</Button>
       </DialogTrigger>
       <DialogOverlay className="fixed inset-0 bg-gray-200/60" />
       <DialogContent className="sm:max-w-1/2 p-8">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Tell us more about your job interviewing</DialogTitle>
+            <DialogTitle>
+              Tell us more about knowledge you want to practice
+            </DialogTitle>
             <DialogDescription>
               Add details about your job position/role, Job description and
               years of experience
@@ -89,7 +97,7 @@ export const AddNewTrigger = ({
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="grid gap-3">
-              <Label htmlFor="role">Job role/ Job position</Label>
+              <Label htmlFor="role">Job position</Label>
               <Input
                 id="role"
                 placeholder="Fullstack, Data engineer,..."
@@ -108,6 +116,18 @@ export const AddNewTrigger = ({
               />
               {errors.skills && (
                 <p className="text-sm text-red-600">{errors.skills.message}</p>
+              )}
+            </div>
+             <div className="grid gap-3">
+              <Label htmlFor="yoes">Years of experience</Label>
+              <Input
+                id="yoes"
+                type="number"
+                placeholder="Years of experience"
+                {...register("yoes")}
+              />
+              {errors.yoes && (
+                <p className="text-sm text-red-600">{errors.yoes.message}</p>
               )}
             </div>
           </div>

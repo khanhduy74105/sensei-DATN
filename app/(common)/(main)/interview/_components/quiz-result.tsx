@@ -15,6 +15,7 @@ interface QuizResultProps {
       | {
           role: string;
           skills: string[];
+          yoes: string;
         }
       | undefined
   ) => Promise<void>;

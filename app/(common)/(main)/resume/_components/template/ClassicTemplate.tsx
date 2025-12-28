@@ -1,155 +1,202 @@
-import { ACCENT_COLOR_OPTIONS, ITempleteProps } from "@/app/(common)/(main)/resume/types";
+import {
+  ACCENT_COLOR_OPTIONS,
+  ITempleteProps,
+} from "@/app/(common)/(main)/resume/types";
 import { formatDate } from "@/lib/utils";
 import { Mail, Phone, MapPin, Linkedin, Globe } from "lucide-react";
 
 const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
-    const colorRGB = ACCENT_COLOR_OPTIONS.find(color => color.name === accentColor)?.rgb;
-    return (
-        <div className="max-w-4xl mx-auto p-8 bg-white text-gray-800 leading-relaxed">
-            {/* Header */}
-            <header className="text-center mb-8 pb-6 border-b-2" style={{ borderColor: colorRGB }}>
-                <h1 className="text-3xl font-bold mb-2" style={{ color: colorRGB }}>
-                    {data.personalInfo?.fullName || "Your Name"}
-                </h1>
+  const colorRGB = ACCENT_COLOR_OPTIONS.find(
+    (color) => color.name === accentColor
+  )?.rgb;
+  return (
+    <div className="max-w-4xl mx-auto p-8 bg-white text-gray-800 leading-relaxed">
+      {/* Header */}
+      <header
+        className="text-center mb-8 pb-6 border-b-2"
+        style={{ borderColor: colorRGB }}
+      >
+        <h1 className="text-3xl font-bold mb-2" style={{ color: colorRGB }}>
+          {data.personalInfo?.fullName || "Your Name"}
+        </h1>
 
-                <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-                    {data.personalInfo?.email && (
-                        <div className="flex items-center gap-1">
-                            <Mail className="size-4" />
-                            <span>{data.personalInfo.email}</span>
-                        </div>
-                    )}
-                    {data.personalInfo?.phone && (
-                        <div className="flex items-center gap-1">
-                            <Phone className="size-4" />
-                            <span>{data.personalInfo.phone}</span>
-                        </div>
-                    )}
-                    {data.personalInfo?.location && (
-                        <div className="flex items-center gap-1">
-                            <MapPin className="size-4" />
-                            <span>{data.personalInfo.location}</span>
-                        </div>
-                    )}
-                    {data.personalInfo?.linkedin && (
-                        <div className="flex items-center gap-1">
-                            <Linkedin className="size-4" />
-                            <span className="break-all">{data.personalInfo.linkedin}</span>
-                        </div>
-                    )}
-                    {data.personalInfo?.website && (
-                        <div className="flex items-center gap-1">
-                            <Globe className="size-4" />
-                            <span className="break-all">{data.personalInfo.website}</span>
-                        </div>
-                    )}
-                </div>
-            </header>
-
-            {/* Professional Summary */}
-            {data.professional_summary && (
-                <section className="mb-6">
-                    <h2 className="text-xl font-semibold mb-3" style={{ color: colorRGB }}>
-                        PROFESSIONAL SUMMARY
-                    </h2>
-                    <p className="text-gray-700 leading-relaxed">{data.professional_summary}</p>
-                </section>
-            )}
-
-            {/* Experience */}
-            {data.experiences && data.experiences.length > 0 && (
-                <section className="mb-6">
-                    <h2 className="text-xl font-semibold mb-4" style={{ color: colorRGB }}>
-                        PROFESSIONAL EXPERIENCE
-                    </h2>
-
-                    <div className="space-y-4">
-                        {data.experiences.map((exp, index) => (
-                            <div key={index} className="border-l-3 pl-4" style={{ borderColor: colorRGB }}>
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900">{exp.title}</h3>
-                                        <p className="text-gray-700 font-medium">{exp.organization}</p>
-                                    </div>
-                                    <div className="text-right text-sm text-gray-600">
-                                        <p>{formatDate(exp.startDate)} - {exp.isCurrent ? "Present" : formatDate(exp.endDate!)}</p>
-                                    </div>
-                                </div>
-                                {exp.description && (
-                                    <div className="text-gray-700 leading-relaxed whitespace-pre-line overflow-ellipsis overflow-hidden">
-                                        {exp.description}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {/* Projects */}
-            {data.projects && data.projects.length > 0 && (
-                <section className="mb-6">
-                    <h2 className="text-xl font-semibold mb-4" style={{ color: colorRGB }}>
-                        PROJECTS
-                    </h2>
-
-                    <ul className="space-y-3 ">
-                        {data.projects.map((proj, index) => (
-                            <div key={index} className="flex justify-between items-start border-l-3 border-gray-300 pl-6">
-                                <div className="max-w-full">
-                                    <li className="font-semibold text-gray-800 ">{proj.name} - {proj.type}</li>
-                                    <p className="text-gray-600 max-w-full text-ellipsis overflow-hidden">{proj.description}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </ul>
-                </section>
-            )}
-
-            {/* Education */}
-            {data.educations && data.educations.length > 0 && (
-                <section className="mb-6">
-                    <h2 className="text-xl font-semibold mb-4" style={{ color: colorRGB }}>
-                        EDUCATION
-                    </h2>
-
-                    <div className="space-y-3">
-                        {data.educations.map((edu, index) => (
-                            <div key={index} className="flex justify-between items-start">
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">
-                                        {edu.degree} {edu.field && `in ${edu.field}`}
-                                    </h3>
-                                    <p className="text-gray-700">{edu.institution}</p>
-                                    {edu.gpa && <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>}
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                    <p>{formatDate(edu.graduationDate)}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {/* Skills */}
-            {data.skills && data.skills.length > 0 && (
-                <section className="mb-6">
-                    <h2 className="text-xl font-semibold mb-4" style={{ color: colorRGB }}>
-                        CORE SKILLS
-                    </h2>
-
-                    <div className="flex gap-4 flex-wrap">
-                        {data.skills.map((skill, index) => (
-                            <div key={index} className="text-gray-700">
-                                • {skill}
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            )}
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+          {data.personalInfo?.email && (
+            <div className="flex items-center gap-1">
+              <Mail className="size-4" />
+              <span>{data.personalInfo.email}</span>
+            </div>
+          )}
+          {data.personalInfo?.phone && (
+            <div className="flex items-center gap-1">
+              <Phone className="size-4" />
+              <span>{data.personalInfo.phone}</span>
+            </div>
+          )}
+          {data.personalInfo?.location && (
+            <div className="flex items-center gap-1">
+              <MapPin className="size-4" />
+              <span>{data.personalInfo.location}</span>
+            </div>
+          )}
+          {data.personalInfo?.linkedin && (
+            <div className="flex items-center gap-1">
+              <Linkedin className="size-4" />
+              <span className="break-all">{data.personalInfo.linkedin}</span>
+            </div>
+          )}
+          {data.personalInfo?.website && (
+            <div className="flex items-center gap-1">
+              <Globe className="size-4" />
+              <span className="break-all">{data.personalInfo.website}</span>
+            </div>
+          )}
         </div>
-    );
-}
+      </header>
+
+      {/* Professional Summary */}
+      {data.professional_summary && (
+        <section className="mb-6">
+          <h2
+            className="text-xl font-semibold mb-3"
+            style={{ color: colorRGB }}
+          >
+            PROFESSIONAL SUMMARY
+          </h2>
+          <ul className="text-gray-700 leading-relaxed whitespace-pre-line">
+            {data.professional_summary.split("\n").map((line, index) => (
+                <li key={index}>{line}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Experience */}
+      {data.experiences && data.experiences.length > 0 && (
+        <section className="mb-6">
+          <h2
+            className="text-xl font-semibold mb-4"
+            style={{ color: colorRGB }}
+          >
+            PROFESSIONAL EXPERIENCE
+          </h2>
+
+          <div className="space-y-4">
+            {data.experiences.map((exp, index) => (
+              <div
+                key={index}
+                className="border-l-3 pl-4"
+                style={{ borderColor: colorRGB }}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{exp.title}</h3>
+                    <p className="text-gray-700 font-medium">
+                      {exp.organization}
+                    </p>
+                  </div>
+                  <div className="text-right text-sm text-gray-600">
+                    <p>
+                      {formatDate(exp.startDate)} -{" "}
+                      {exp.isCurrent ? "Present" : formatDate(exp.endDate!)}
+                    </p>
+                  </div>
+                </div>
+                {exp.description && (
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line overflow-ellipsis overflow-hidden">
+                    {exp.description.split("\n").map((line, i) => (
+                      <li key={i}>{line}</li>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Projects */}
+      {data.projects && data.projects.length > 0 && (
+        <section className="mb-6">
+          <h2
+            className="text-xl font-semibold mb-4"
+            style={{ color: colorRGB }}
+          >
+            PROJECTS
+          </h2>
+
+          <ul className="space-y-3 ">
+            {data.projects.map((proj, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-start border-l-3 border-gray-300 pl-6"
+              >
+                <div className="max-w-full">
+                  <li className="font-semibold text-gray-800 ">
+                    {proj.name} - {proj.type}
+                  </li>
+                  <p className="text-gray-600 max-w-full text-ellipsis overflow-hidden">
+                    {proj.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Education */}
+      {data.educations && data.educations.length > 0 && (
+        <section className="mb-6">
+          <h2
+            className="text-xl font-semibold mb-4"
+            style={{ color: colorRGB }}
+          >
+            EDUCATION
+          </h2>
+
+          <div className="space-y-3">
+            {data.educations.map((edu, index) => (
+              <div key={index} className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    {edu.degree} {edu.field && `in ${edu.field}`}
+                  </h3>
+                  <p className="text-gray-700">{edu.institution}</p>
+                  {edu.gpa && (
+                    <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">
+                  <p>{formatDate(edu.graduationDate)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Skills */}
+      {data.skills && data.skills.length > 0 && (
+        <section className="mb-6">
+          <h2
+            className="text-xl font-semibold mb-4"
+            style={{ color: colorRGB }}
+          >
+            CORE SKILLS
+          </h2>
+
+          <div className="flex gap-4 flex-wrap">
+            {data.skills.map((skill, index) => (
+              <div key={index} className="text-gray-700">
+                • {skill}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+};
 
 export default ClassicTemplate;

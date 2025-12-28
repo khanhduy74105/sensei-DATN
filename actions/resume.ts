@@ -345,22 +345,32 @@ export async function improveWithAI({
     }
 
     const basePrompt = `
-        You are a professional resume writer specializing in ATS-optimized content for ${user.industry} professionals.
-        Make it more impactful, quantifiable, and aligned with industry standards.
-        Improve the following ${type} content:
+        # ROLE
+        You are a Senior Career Strategist and ATS (Applicant Tracking System) Expert. Your specialty is transforming passive job descriptions into high-impact, achievement-oriented bullet points.
+
+        # TASK
+        Rewrite the provided "${type}" content to be more impactful, professional, and results-driven.
+
+        # EXECUTION RULES
+        1. **Action-Oriented**: Start sentences with strong, diverse action verbs (e.g., 'orchestrated', 'streamlined', 'surpassed'). Avoid "Responsible for".
+        2. **Achievement Focus**: Shift the focus from "what you did" to "what you achieved". Use the formula: [Action Verb] + [Task] + [Impact/Result].
+        3. **Smart Quantification**: 
+        - Use the specific metrics provided in the text.
+        - If no metrics exist, focus on the *magnitude* or *frequency* of the work to imply scale.
+        4. **Length & Structure**: 
+        - Expand or condense the content to exactly 3-4 professional sentences.
+        - Deliver as a single, separate sentences with an enter and start with "-".
+        5. **Industry Alignment**: Integrate relevant technical skills and keywords naturally (no keyword stuffing).
+        6. **Constraint**: Do NOT invent fictional data, company names, or tools not mentioned in the original text.
+
+        # OUTPUT FORMAT
+        - Strictly English only.
+        - Return ONLY the improved paragraph. 
+        - No introductions, no quotes, no explanations.
+
+        # ORIGINAL CONTENT TO IMPROVE:
         """${current}"""
-
-        General rules:
-            1. Use action verbs
-            2. Include metrics and results where possible
-            3. Highlight relevant technical skills
-            4. Keep it concise but detailed
-            5. Focus on achievements over responsibilities
-            6. Use industry-specific keywords
-            7. Limit to 3-4 sentences (about 40 words)
-        Format the response as a single paragraph without any additional text or explanations.
         `;
-
     const prompt = basePrompt;
 
     try {
@@ -558,7 +568,7 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
         - Output MUST be valid JSON and match the schema EXACTLY.
         - If a resume field is already strong, DO NOT suggest changes for that field.
 
-            Analyze the match between the following Job Description and Candidate Resume.
+        Analyze the match between the following Job Description and Candidate Resume.
 
         ========================
         JOB DESCRIPTION

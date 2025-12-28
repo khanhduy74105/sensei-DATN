@@ -245,7 +245,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         </p>
       </div>
       <div className="flex-1 flex gap-6">
-        <aside className="w-full md:w-1/2 lg:w-2/5 bg-card border border-border rounded-md p-6 flex flex-col shadow-sm">
+        <aside className="w-full md:w-1/2 bg-card border border-border rounded-md p-6 flex flex-col shadow-sm">
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-4">
             {questions.map((_, idx) => {
@@ -365,7 +365,7 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         </aside>
 
         {/* Right column: camera + record control */}
-        <main className="flex-1 md:1/2 lg:w-3/5 bg-card border border-border rounded-md p-6 flex flex-col items-center shadow-sm">
+        <main className="flex-1 md:1/2 bg-card border border-border rounded-md p-6 flex flex-col items-center shadow-sm">
           <div
             className={`w-full h-80 bg-muted rounded-md flex items-center justify-center border border-dashed border-border transition-all duration-300 relative ${
               isSoundDetected
