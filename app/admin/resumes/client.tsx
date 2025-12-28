@@ -47,9 +47,6 @@ export default function AdminResumesClient({
                 Template
               </th>
               <th className="px-4 py-3 text-left whitespace-nowrap">Created</th>
-              <th className="px-4 py-3 text-center whitespace-nowrap">
-                Actions
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800 bg-gray-900">
@@ -91,17 +88,6 @@ export default function AdminResumesClient({
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
                     {new Date(resume.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        router.push(`/admin/resumes/${resume.id}`)
-                      }
-                    >
-                      <Eye size={16} />
-                    </Button>
                   </td>
                 </tr>
               ))

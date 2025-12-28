@@ -20,19 +20,19 @@ const AdminUsersPageClient = ({
     <div className="p-6 bg-gray-950 text-white min-h-screen space-y-6">
       <h2 className="text-3xl font-bold mb-4">Users</h2>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-700 shadow-md">
-        <table className="min-w-full divide-y divide-gray-700">
+      <div className="rounded-lg border border-gray-700 shadow-md">
+        <table className="w-full divide-y divide-gray-700">
           <thead className="bg-gray-900 text-gray-200">
             <tr>
-              <th className="px-4 py-3 text-left">Avatar</th>
-              <th className="px-4 py-3 text-left">Email</th>
-              <th className="px-4 py-3 text-left">Name</th>
-              <th className="px-4 py-3 text-left">Upgraded</th>
-              <th className="px-4 py-3 text-center">Resumes</th>
-              <th className="px-4 py-3 text-center">Cover Letters</th>
-              <th className="px-4 py-3 text-center">Assessments</th>
-              <th className="px-4 py-3 text-center">Mock Interviews</th>
-              <th className="px-4 py-3 text-left">Created At</th>
+              <th className="px-2 py-3 text-left w-14">Avatar</th>
+              <th className="px-3 py-3 text-left min-w-[180px]">Email</th>
+              <th className="px-3 py-3 text-left min-w-[120px]">Name</th>
+              <th className="px-2 py-3 text-center w-20">Upgraded</th>
+              <th className="px-2 py-3 text-center w-20">Resumes</th>
+              <th className="px-2 py-3 text-center w-20">Cover</th>
+              <th className="px-2 py-3 text-center w-20">Assess.</th>
+              <th className="px-2 py-3 text-center w-20">Mock</th>
+              <th className="px-3 py-3 text-left min-w-[100px]">Created</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800">
@@ -42,7 +42,7 @@ const AdminUsersPageClient = ({
                   key={user.id}
                   className="hover:bg-gray-800 transition-colors duration-150"
                 >
-                  <td className="px-4 py-2">
+                  <td className="px-2 py-2">
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-700">
                       {user.imageUrl ? (
                         <Image
@@ -53,28 +53,38 @@ const AdminUsersPageClient = ({
                           className="object-cover w-full h-full"
                         />
                       ) : (
-                        <div className="flex items-center justify-center w-full h-full bg-gray-700 text-gray-300">
+                        <div className="flex items-center justify-center w-full h-full bg-gray-700 text-gray-300 text-sm">
                           {user.name?.[0] || "U"}
                         </div>
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2">{user.email}</td>
-                  <td className="px-4 py-2">{user.name || "-"}</td>
-                  <td className="px-4 py-2 flex justify-center items-center">
-                    {user.isPaid ? <CheckCircle color="green" /> : <X />}
+                  <td className="px-3 py-2 truncate max-w-[200px]" title={user.email}>
+                    {user.email}
                   </td>
-                  <td className="px-4 py-2 text-center">{user.resumeCount}</td>
-                  <td className="px-4 py-2 text-center">
+                  <td className="px-3 py-2 truncate max-w-[150px]" title={user.name || "-"}>
+                    {user.name || "-"}
+                  </td>
+                  <td className="px-2 py-2">
+                    <div className="flex justify-center items-center">
+                      {user.isPaid ? (
+                        <CheckCircle className="w-5 h-5" color="green" />
+                      ) : (
+                        <X className="w-5 h-5" />
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-2 py-2 text-center text-sm">{user.resumeCount}</td>
+                  <td className="px-2 py-2 text-center text-sm">
                     {user.coverLetterCount}
                   </td>
-                  <td className="px-4 py-2 text-center">
+                  <td className="px-2 py-2 text-center text-sm">
                     {user.assessmentCount}
                   </td>
-                  <td className="px-4 py-2 text-center">
+                  <td className="px-2 py-2 text-center text-sm">
                     {user.mockInterviewCount}
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-3 py-2 text-sm">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
@@ -82,7 +92,7 @@ const AdminUsersPageClient = ({
             ) : (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={9}
                   className="text-center p-6 text-gray-400 font-medium"
                 >
                   No users found.
