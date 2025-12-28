@@ -183,7 +183,7 @@ const UploadResumeTrigger = () => {
             }}
           >
             Continue
-            {converting && <Loader2 />}
+            {converting && <Loader2 className="h-4 w-4 animate-spin" />}
           </Button>
         </DialogFooter>
       </DialogContent>

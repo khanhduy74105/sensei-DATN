@@ -377,6 +377,22 @@ export async function improveWithAI({
 }
 
 export async function convertExtractedTextToResumeData(title: string, resumeExtractedText: string) {
+    const { userId } = await auth();
+    if (!userId) throw new Error("User not authenticated");
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+        include: { UserCredit: true },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+        return {
+            success: false,
+            error: "OUT_OF_BALANCE",
+        }
+    }
     const RESUME_PARSING_PROMPT = `
         You are an expert resume parser. Extract and structure information from the provided resume text into a JSON format.
 
