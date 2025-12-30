@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCoverLetter } from "@/actions/cover-letter";
 import CoverLetterPreview from "../_components/cover-letter-preview";
+import { ICoverLetter } from "@/types";
 
 interface Props {
   params: {
@@ -13,6 +14,26 @@ interface Props {
 export default async function EditCoverLetterPage({ params }: Props) {
   const { id } = await params;
   const coverLetter = await getCoverLetter(id);
+
+  const headerLetter = (letter: ICoverLetter) => {
+    let header = `Cover Letter: ${letter.title} at ${letter.companyName}`;
+
+    switch (letter.type) {
+      case "application":
+        header = `Application Cover Letter: ${letter.title} at ${letter.companyName}`;
+        break;
+      case "prospecting":
+        header = `Prospecting Cover Letter: About ${letter.title} at ${letter.companyName}`;
+        break;
+      case "referral":
+        header = `Referral Cover Letter: ${letter.title} at ${letter.companyName}`;
+        break;
+      case "thankyou":
+        header = `Thank You Letter: ${letter.recipient} at ${letter.companyName}`;
+        break;
+    }
+    return header;
+  };
 
   return (
     <div className="container mx-auto py-6">
@@ -25,7 +46,7 @@ export default async function EditCoverLetterPage({ params }: Props) {
         </Link>
 
         <h1 className="text-6xl font-bold gradient-title mb-6">
-          {coverLetter?.jobTitle} at {coverLetter?.companyName}
+          {headerLetter(coverLetter!)}
         </h1>
       </div>
 

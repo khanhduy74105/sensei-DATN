@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import getGeneratedAIContent from "@/lib/openRouter";
+import { checkUserCredits } from "./user";
 
 export async function createResume(
     data: Partial<IResumeContent> & { title: string }
@@ -330,19 +331,10 @@ export async function improveWithAI({
     const { userId } = await auth();
     if (!userId) throw new Error("User not authenticated");
 
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId },
-        include: { UserCredit: true },
-    });
+    const checkResult = await checkUserCredits(userId);
+    if (!checkResult.success) return checkResult;
 
-    if (!user) throw new Error("User not found");
-
-    if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
-        return {
-            success: false,
-            error: "OUT_OF_BALANCE",
-        }
-    }
+    const user = checkResult.user!;
 
     const basePrompt = `
         # ROLE
@@ -390,19 +382,10 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
     const { userId } = await auth();
     if (!userId) throw new Error("User not authenticated");
 
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId },
-        include: { UserCredit: true },
-    });
+    const checkResult = await checkUserCredits(userId);
+    if (!checkResult.success) return checkResult;
 
-    if (!user) throw new Error("User not found");
-
-    if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
-        return {
-            success: false,
-            error: "OUT_OF_BALANCE",
-        }
-    }
+    const user = checkResult.user!;
     const RESUME_PARSING_PROMPT = `
         You are an expert resume parser. Extract and structure information from the provided resume text into a JSON format.
 
@@ -490,6 +473,7 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
         - Extract from "Skills", "Technical Skills", "Core Competencies" section
         - Return as array of individual skills
         - Include programming languages, frameworks, tools, soft skills
+        - Should be keywords only
         - Separate combined skills (e.g., "React/Next.js" → ["React", "Next.js"])
 
         **Date Parsing Rules:**
@@ -538,95 +522,54 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
     const { userId } = await auth();
     if (!userId) throw new Error("User not authenticated");
 
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId },
-        include: { UserCredit: true },
-    });
+    const checkResult = await checkUserCredits(userId);
+    if (!checkResult.success) return checkResult;
 
-    if (!user) throw new Error("User not found");
-
-    if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
-        return {
-            success: false,
-            error: "OUT_OF_BALANCE",
-        }
-    }
     try {
         const prompt = `
-        You are an expert Applicant Tracking System (ATS) and senior technical recruiter.
+        # ROLE
+        You are an expert ATS (Applicant Tracking System) Specialist. Your goal is to optimize the candidate's Resume to pass ATS filters by aligning it perfectly with the Job Description (JD).
 
-        Your task is to analyze how well a candidate’s resume matches a job description
-        and propose improvements WITHOUT altering the resume automatically.
-
-        RULES:
-        - Do NOT fabricate skills, experience, education, or achievements.
-        - Do NOT assume missing information.
-        - Resume JSON is the single source of truth.
-        - Job Description text may be unstructured or messy.
-        - Only suggest improvements when there is a clear benefit.
-        - Suggestions must be realistic and aligned with the Job Description.
-        - Output MUST be valid JSON and match the schema EXACTLY.
-        - If a resume field is already strong, DO NOT suggest changes for that field.
-
-        Analyze the match between the following Job Description and Candidate Resume.
-
-        ========================
-        JOB DESCRIPTION
-        ========================
+        # INPUT DATA
+        ## JOB DESCRIPTION
         """
         ${jd}
         """
 
-        ========================
-        CANDIDATE RESUME (STRUCTURED JSON)
-        ========================
-        {
-            professional_summary: ${resume.professional_summary},
-            experiences: ${JSON.stringify(resume.experiences)},
-            educations: ${JSON.stringify(resume.educations)},
-            projects: ${JSON.stringify(resume.projects)},
-            skills: ${JSON.stringify(resume.skills)},
-        }
+        ## CANDIDATE RESUME (JSON)
+        ${JSON.stringify({
+            professional_summary: resume.professional_summary,
+            experiences: resume.experiences,
+            educations: resume.educations,
+            projects: resume.projects,
+            skills: resume.skills,
+        })}
 
-        ========================
-        TASKS
-        ========================
-        1. Evaluate how well the resume matches the Job Description.
-        2. Identify missing required and nice-to-have skills.
-        3. Identify missing or weak experience areas.
-        4. Provide a match score (0–100) and a final verdict.
-        5. Suggest general improvements to increase matching.
-        6. If applicable, propose field-level improvements for:
-        - professional_summary
-        - experiences
-        - educations
-        - projects
-        - skills
+        # STRICT RULES FOR SKILLS (CRITICAL)
+        1. ONLY MATCHING KEYWORDS: In 'fieldSuggestions.skills.suggested', you MUST include all essential skills and technologies mentioned in the JD, even if they are missing from the current resume.
+        2. ATOMIZED FORMAT: Each skill must be a standalone keyword/tag. 
+        - Split "React/Next.js" into "React", "Next.js".
+        - Split "HTML/CSS" into "HTML", "CSS".
+        3. NO EXPLANATIONS: DO NOT include any text in parentheses or extra descriptors.
+        - WRONG: "Automated Testing (Eagerness to learn)", "English (Fluent)", "React (v18)".
+        - RIGHT: "Automated Testing", "English", "React".
+        4. CLEANING: Remove all adjectives like "Expert", "Proficient", "Junior", or "Knowledge of".
 
-        IMPORTANT:
-        - Field-level suggestions must include:
-        - current content
-        - suggested improved content
-        - a clear reason
-        - improved content should be match JD
-        - Use array index to reference specific experience, education, or project items.
-        - If no improvement is needed for a field, omit that field from the response.
-        - Do NOT rewrite the entire resume.
-        - The candidate must be able to apply suggestions selectively.
+        # TASKS
+        1. Overall Match Analysis: Score 0-100 based on JD requirements vs Resume.
+        2. Identify missing skills: List skills required by JD that are not in the resume.
+        3. Rewrite Sections: Optimize 'professional_summary', 'experiences', and 'projects' by weaving in JD keywords naturally.
+        4. Skills Optimization: Generate a cleaned, atomized list of top 20 skills that are most relevant to the JD.
 
-        ========================
-        OUTPUT FORMAT
-        ========================
-        Return a single JSON object following this exact schema:
-
+        # OUTPUT FORMAT (STRICT JSON ONLY)
         {
             matchAnalysis: {
                 overallScore: number; // 0–100
                 verdict: "strong_match" | "moderate_match" | "weak_match";
 
                 missingSkills: {
-                    required: string[];
-                    niceToHave: string[];
+                    "required": string[], // Skills in JD but NOT in Resume
+                    "niceToHave": string[] // Optional skills in JD but NOT in Resume
                 };
 
                 missingExperience: string[];
@@ -684,10 +627,9 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
                     reason: string;
                 }>;
 
-                // skills should only keywords, separate combined skills (e.g., "React/Next.js" → ["React", "Next.js"]), maximum 10 most important skills
                 skills?: {
                     current: string[];
-                    suggested: string[]; // should remove skills which is unnecessary and add required skills
+                    suggested: string[];
                     reason: string;
                 };
             };

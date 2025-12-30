@@ -183,3 +183,35 @@ export const templateDataSchema = z.object({
   projects: z.array(resumeProjectSchema).optional(),
   skills: z.array(z.string()).optional(),
 });
+
+
+export const applicationEmailSchema = z.object({
+  companyName: z.string().min(1, "Company name is required"),
+  jobTitle: z.string().min(1, "Job title is required"),
+  jobDescription: z.string().min(1, "Job description is required"),
+  hiringManager: z.string().optional(),
+});
+
+// 2. Prospecting Email Schema
+export const prospectingEmailSchema = z.object({
+  companyName: z.string().min(1, "Company name is required"),
+  recipientName: z.string().optional(),
+  contextReason: z.string().min(1, "Context/Reason is required"),
+  targetRole: z.string().optional(),
+});
+
+// 3. Referral Request Schema
+export const referralRequestSchema = z.object({
+  companyName: z.string().min(1, "Company name is required"),
+  recipientName: z.string().min(1, "Recipient name is required"),
+  relationship: z.string().min(1, "Relationship is required"),
+  targetJobLink: z.string().optional(),
+});
+
+// 4. Thank You Email Schema
+export const thankYouEmailSchema = z.object({
+  companyName: z.string().min(1, "Company name is required"),
+  jobTitle: z.string().min(1, "Job title is required"),
+  interviewerName: z.string().min(1, "Interviewer name is required"),
+  discussionTopic: z.string().optional(),
+});

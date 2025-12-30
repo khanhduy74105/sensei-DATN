@@ -27,7 +27,7 @@ import { deleteCoverLetter } from "@/actions/cover-letter";
 import { ICoverLetter } from "@/types";
 
 interface CoverLetterProps {
-    coverLetters: ICoverLetter[]
+  coverLetters: ICoverLetter[];
 }
 
 export default function CoverLetterList({ coverLetters }: CoverLetterProps) {
@@ -39,10 +39,9 @@ export default function CoverLetterList({ coverLetters }: CoverLetterProps) {
       toast.success("Cover letter deleted successfully!");
       router.refresh();
     } catch (error) {
-        if (error instanceof Error) {
-            toast.error(error.message || "Failed to delete cover letter");
-            
-        }
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to delete cover letter");
+      }
     }
   };
 
@@ -59,6 +58,26 @@ export default function CoverLetterList({ coverLetters }: CoverLetterProps) {
     );
   }
 
+  const headerLetter = (letter: ICoverLetter) => {
+    let header = `Cover Letter: ${letter.title} at ${letter.companyName}`;
+
+    switch (letter.type) {
+      case "application":
+        header = `Application Cover Letter: ${letter.title} at ${letter.companyName}`;
+        break;
+      case "prospecting":
+        header = `Prospecting Cover Letter: About ${letter.title} at ${letter.companyName}`;
+        break;
+      case "referral":
+        header = `Referral Cover Letter: ${letter.title} at ${letter.companyName}`;
+        break;
+      case "thankyou":
+        header = `Thank You Letter: ${letter.recipient} at ${letter.companyName}`;
+        break;
+    }
+    return header;
+  };
+
   return (
     <div className="space-y-4">
       {coverLetters.map((letter) => (
@@ -67,7 +86,7 @@ export default function CoverLetterList({ coverLetters }: CoverLetterProps) {
             <div className="flex items-start justify-between">
               <div>
                 <CardTitle className="text-xl gradient-title">
-                  {letter.jobTitle} at {letter.companyName}
+                  {headerLetter(letter)}
                 </CardTitle>
                 <CardDescription>
                   Created {format(new Date(letter.createdAt), "PPP")}
@@ -92,7 +111,7 @@ export default function CoverLetterList({ coverLetters }: CoverLetterProps) {
                       <AlertDialogTitle>Delete Cover Letter?</AlertDialogTitle>
                       <AlertDialogDescription>
                         This action cannot be undone. This will permanently
-                        delete your cover letter for {letter.jobTitle} at{" "}
+                        delete your letter for {letter.title} at{" "}
                         {letter.companyName}.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -112,7 +131,7 @@ export default function CoverLetterList({ coverLetters }: CoverLetterProps) {
           </CardHeader>
           <CardContent>
             <div className="text-muted-foreground text-sm line-clamp-3">
-              {letter.jobDescription}
+              {letter.description}
             </div>
           </CardContent>
         </Card>

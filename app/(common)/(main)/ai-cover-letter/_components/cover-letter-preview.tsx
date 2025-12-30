@@ -7,21 +7,12 @@ import { Button } from "@/components/ui/button";
 import { updateCoverLetter } from "@/actions/cover-letter";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ICoverLetter } from "@/types";
 
 const CoverLetterPreview = ({
   coverLetter,
 }: {
-  coverLetter: {
-    content: string;
-    id: string;
-    createdAt: Date;
-    updatedAt: Date;
-    userId: string;
-    jobDescription: string | null;
-    companyName: string;
-    jobTitle: string;
-    status: string;
-  } | null;
+  coverLetter: ICoverLetter | null;
 }) => {
   const [value, setValue] = useState(coverLetter?.content ?? "");
   const [loading, setLoading] = useState(false);

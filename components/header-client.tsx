@@ -60,10 +60,15 @@ export default function HeaderClient({
 
       <div className="flex items-center space-x-2">
         <SignedIn>
-          {!userCredit?.isPaid && (
+          {!userCredit?.isPaid ? (
             <Button onClick={() => open()}>
               <Crown />
             </Button>
+          ) : (
+            <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 px-2 py-1 shadow-lg">
+              <Crown className="h-3 w-3 text-white" />
+              <span className="text-[10px] font-bold text-white">PRO</span>
+            </div>
           )}
 
           <Link href="/dashboard">

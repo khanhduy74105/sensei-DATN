@@ -5,6 +5,7 @@ import { IAssessment, ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
+import { checkUserCredits } from "./user";
 
 interface QuizQuestion {
   question: string;
@@ -17,23 +18,10 @@ export async function generateQuiz(entry?: { role: string; skills: string[], yoe
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-    select: {
-      industry: true,
-      skills: true,
-      UserCredit: true,
-    },
-  });
+  const checkResult = await checkUserCredits(userId);
+  if (!checkResult.success) return checkResult;
 
-  if (!user) throw new Error("User not found");
-
-  if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
-    return {
-      success: false,
-      error: "OUT_OF_BALANCE",
-    }
-  }
+  const user = checkResult.user!;
 
   let prompt = entry ?
     `Generate 10 technical interview questions for a ${entry.role} with ${entry.yoes} years of experience ${entry.skills?.length ? ` with expertise in ${entry.skills.join(", ")}` : ""}`
@@ -77,19 +65,10 @@ export async function saveQuizResult(questions: QuizQuestion[], answers: string[
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-    include: { UserCredit: true },
-  });
+  const checkResult = await checkUserCredits(userId);
+  if (!checkResult.success) return checkResult;
 
-  if (!user) throw new Error("User not found");
-
-  if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
-    return {
-      success: false,
-      error: "OUT_OF_BALANCE",
-    }
-  }
+  const user = checkResult.user!;
   const questionResults = questions.map((q, index) => ({
     question: q.question,
     answer: q.correctAnswer,
@@ -182,19 +161,10 @@ export async function generateInterviewQuestions({ role, description, yoes }: { 
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-    include: { UserCredit: true },
-  });
+  const checkResult = await checkUserCredits(userId);
+  if (!checkResult.success) return checkResult;
 
-  if (!user) throw new Error("User not found");
-
-  if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
-    return {
-      success: false,
-      error: "OUT_OF_BALANCE",
-    }
-  }
+  const user = checkResult.user!;
   const prompt = `
     Act as a technical interviewer. 
     Generate 5 professional interview questions for the position: ${role}, 
@@ -305,19 +275,10 @@ export async function getLiveMockInterviewById(id: string) {
 export async function saveLiveInterviewResult(mockInterview: ILiveMockInterview) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-    include: { UserCredit: true },
-  });
+  const checkResult = await checkUserCredits(userId);
+  if (!checkResult.success) return checkResult;
 
-  if (!user) throw new Error("User not found");
-
-  if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
-    return {
-      success: false,
-      error: "OUT_OF_BALANCE",
-    }
-  }
+  const user = checkResult.user!;
 
   try {
     const prompt = `

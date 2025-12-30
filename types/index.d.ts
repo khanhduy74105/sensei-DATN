@@ -40,10 +40,12 @@ export interface ICoverLetter {
   id: string;
   userId: string;
   content: string;
-  jobDescription?: string | null;
-  companyName: string;
-  jobTitle: string;
-  // status: "draft" | "completed";
+  recipient? : string | null;
+  description?: string | null;
+  companyName: string | null;
+  title: string;
+  type: string;
+  status: string;
   createdAt: Date;
   updatedAt: Date;
 }

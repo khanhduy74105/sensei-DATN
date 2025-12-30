@@ -94,7 +94,7 @@ export async function getUserOnboardingStatus() {
 }
 
 export async function getUser() {
-     const { userId } = await auth();
+    const { userId } = await auth();
     if (!userId) throw new Error('User not authenticated');
 
     const user = await db.user.findUnique({
@@ -103,4 +103,23 @@ export async function getUser() {
     if (!user) throw new Error('User not found');
 
     return user;
+}
+
+export async function checkUserCredits(userId: string) {
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+        include: { UserCredit: true },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    if (!user.UserCredit?.isPaid && (user.UserCredit?.balance || 0) <= 0) {
+        return {
+            success: false,
+            error: "OUT_OF_BALANCE",
+            user: null,
+        };
+    }
+
+    return { success: true, user };
 }

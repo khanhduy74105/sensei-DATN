@@ -113,9 +113,11 @@ model CoverLetter {
   id             String   @id @default(cuid())
   userId         String
   content        String
-  jobDescription String?
-  companyName    String
-  jobTitle       String
+  recipient      String?
+  description    String
+  companyName    String?
+  title          String
+  type           String   @default("application")
   status         String   @default("draft")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
