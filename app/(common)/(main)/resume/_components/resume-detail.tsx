@@ -136,7 +136,7 @@ export default function ResumeBuilderDetailPage({
 
       const thumbnailResult = await generateThumbnail("resume-preview", {
         format: "jpeg",
-        quality: 0.75
+        quality: 0.75,
       });
 
       if (thumbnailResult.success && thumbnailResult.blob) {
@@ -214,7 +214,7 @@ export default function ResumeBuilderDetailPage({
     field: K,
     value: any
   ) => {
-    setValue(field, value, { shouldDirty: true});
+    setValue(field, value, { shouldDirty: true });
   };
 
   const onApplyEnhance = (
@@ -278,27 +278,47 @@ export default function ResumeBuilderDetailPage({
   switch (templateType) {
     case "classic":
       previewContent = (
-        <ClassicTemplate data={formValues} accentColor={accentColor} />
+        <ClassicTemplate
+          data={formValues}
+          accentColor={accentColor}
+          setFieldStep={setFieldStep}
+        />
       );
       break;
     case "modern":
       previewContent = (
-        <ModernTemplate data={formValues} accentColor={accentColor} />
+        <ModernTemplate
+          data={formValues}
+          accentColor={accentColor}
+          setFieldStep={setFieldStep}
+        />
       );
       break;
     case "minimal_image":
       previewContent = (
-        <MinimalImageTemplate data={formValues} accentColor={accentColor} />
+        <MinimalImageTemplate
+          data={formValues}
+          accentColor={accentColor}
+          setFieldStep={setFieldStep}
+        />
       );
       break;
     case "minimal":
       previewContent = (
-        <MinimalTemplate data={formValues} accentColor={accentColor} />
+        <MinimalTemplate
+          data={formValues}
+          accentColor={accentColor}
+          setFieldStep={setFieldStep}
+        />
       );
       break;
     default:
       previewContent = (
-        <ClassicTemplate data={formValues} accentColor={accentColor} />
+        <ClassicTemplate
+          data={formValues}
+          accentColor={accentColor}
+          setFieldStep={setFieldStep}
+        />
       );
 
       break;

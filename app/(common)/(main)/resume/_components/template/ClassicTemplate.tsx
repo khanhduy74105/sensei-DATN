@@ -1,11 +1,16 @@
 import {
   ACCENT_COLOR_OPTIONS,
   ITempleteProps,
+  KeyOfITemplateData,
 } from "@/app/(common)/(main)/resume/types";
 import { formatDate } from "@/lib/utils";
 import { Mail, Phone, MapPin, Linkedin, Globe } from "lucide-react";
 
-const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
+const ClassicTemplate = ({
+  data,
+  accentColor,
+  setFieldStep,
+}: ITempleteProps) => {
   const colorRGB = ACCENT_COLOR_OPTIONS.find(
     (color) => color.name === accentColor
   )?.rgb;
@@ -15,6 +20,7 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
       <header
         className="text-center mb-8 pb-6 border-b-2"
         style={{ borderColor: colorRGB }}
+        onClick={() => setFieldStep(KeyOfITemplateData.personalInfo)}
       >
         <h1 className="text-3xl font-bold mb-2" style={{ color: colorRGB }}>
           {data.personalInfo?.fullName || "Your Name"}
@@ -56,7 +62,10 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Professional Summary */}
       {data.professional_summary && (
-        <section className="mb-6">
+        <section
+          className="mb-6"
+          onClick={() => setFieldStep(KeyOfITemplateData.professional_summary)}
+        >
           <h2
             className="text-xl font-semibold mb-3"
             style={{ color: colorRGB }}
@@ -65,7 +74,7 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
           </h2>
           <ul className="text-gray-700 leading-relaxed whitespace-pre-line">
             {data.professional_summary.split("\n").map((line, index) => (
-                <li key={index}>{line}</li>
+              <li key={index}>{line}</li>
             ))}
           </ul>
         </section>
@@ -73,7 +82,10 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Experience */}
       {data.experiences && data.experiences.length > 0 && (
-        <section className="mb-6">
+        <section
+          className="mb-6"
+          onClick={() => setFieldStep(KeyOfITemplateData.experience)}
+        >
           <h2
             className="text-xl font-semibold mb-4"
             style={{ color: colorRGB }}
@@ -117,7 +129,10 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Projects */}
       {data.projects && data.projects.length > 0 && (
-        <section className="mb-6">
+        <section
+          className="mb-6"
+          onClick={() => setFieldStep(KeyOfITemplateData.project)}
+        >
           <h2
             className="text-xl font-semibold mb-4"
             style={{ color: colorRGB }}
@@ -147,7 +162,10 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Education */}
       {data.educations && data.educations.length > 0 && (
-        <section className="mb-6">
+        <section
+          className="mb-6"
+          onClick={() => setFieldStep(KeyOfITemplateData.education)}
+        >
           <h2
             className="text-xl font-semibold mb-4"
             style={{ color: colorRGB }}
@@ -178,7 +196,10 @@ const ClassicTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Skills */}
       {data.skills && data.skills.length > 0 && (
-        <section className="mb-6">
+        <section
+          className="mb-6"
+          onClick={() => setFieldStep(KeyOfITemplateData.skills)}
+        >
           <h2
             className="text-xl font-semibold mb-4"
             style={{ color: colorRGB }}

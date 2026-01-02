@@ -1,10 +1,11 @@
 import {
   ACCENT_COLOR_OPTIONS,
   ITempleteProps,
+  KeyOfITemplateData,
 } from "@/app/(common)/(main)/resume/types";
 import { formatDate } from "@/lib/utils";
 
-const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
+const MinimalTemplate = ({ data, accentColor, setFieldStep }: ITempleteProps) => {
   const colorRGB = ACCENT_COLOR_OPTIONS.find(
     (color) => color.name === accentColor
   )?.rgb;
@@ -12,7 +13,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
   return (
     <div className="max-w-4xl mx-auto p-8 bg-white text-gray-900 font-light">
       {/* Header */}
-      <header className="mb-10">
+      <header className="mb-10" onClick={() => setFieldStep(KeyOfITemplateData.personalInfo)}>
         <h1 className="text-4xl font-thin mb-4 tracking-wide">
           {data.personalInfo?.fullName || "Your Name"}
         </h1>
@@ -34,7 +35,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Professional Summary */}
       {data.professional_summary && (
-        <section className="mb-10">
+        <section className="mb-10" onClick={() => setFieldStep(KeyOfITemplateData.professional_summary)}>
            <ul className="text-gray-700 leading-relaxed whitespace-pre-line">
             {data.professional_summary.split("\n").map((line, index) => (
                 <li key={index}>{line}</li>
@@ -45,7 +46,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Experience */}
       {data.experiences && data.experiences.length > 0 && (
-        <section className="mb-10">
+        <section className="mb-10" onClick={() => setFieldStep(KeyOfITemplateData.experience)}>
           <h2
             className="text-sm uppercase tracking-widest mb-6 font-medium"
             style={{ color: colorRGB }}
@@ -77,7 +78,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Projects */}
       {data.projects && data.projects.length > 0 && (
-        <section className="mb-10">
+        <section className="mb-10" onClick={() => setFieldStep(KeyOfITemplateData.project)}>
           <h2
             className="text-sm uppercase tracking-widest mb-6 font-medium"
             style={{ color: colorRGB }}
@@ -101,7 +102,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Education */}
       {data.educations && data.educations.length > 0 && (
-        <section className="mb-10">
+        <section className="mb-10" onClick={() => setFieldStep(KeyOfITemplateData.education)}>
           <h2
             className="text-sm uppercase tracking-widest mb-6 font-medium"
             style={{ color: colorRGB }}
@@ -132,7 +133,7 @@ const MinimalTemplate = ({ data, accentColor }: ITempleteProps) => {
 
       {/* Skills */}
       {data.skills && data.skills.length > 0 && (
-        <section>
+        <section onClick={() => setFieldStep(KeyOfITemplateData.skills)}>
           <h2
             className="text-sm uppercase tracking-widest mb-6 font-medium"
             style={{ color: colorRGB }}

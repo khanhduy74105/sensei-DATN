@@ -1,6 +1,7 @@
 export interface ITempleteProps {
     data: ITemplateData;
     accentColor: string;
+    setFieldStep: (step: KeyOfITemplateData) => void;
 }
 
 export interface IResumePersonalData {

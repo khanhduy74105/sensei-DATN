@@ -1,12 +1,17 @@
 import {
   ACCENT_COLOR_OPTIONS,
   ITempleteProps,
+  KeyOfITemplateData,
 } from "@/app/(common)/(main)/resume/types";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import Image from "next/image";
 
-const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
+const MinimalImageTemplate = ({
+  data,
+  accentColor,
+  setFieldStep,
+}: ITempleteProps) => {
   const colorRGB = ACCENT_COLOR_OPTIONS.find(
     (color) => color.name === accentColor
   )?.rgb;
@@ -14,7 +19,10 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
   return (
     <div className="max-w-5xl mx-auto bg-white text-zinc-800">
       <div className="grid grid-cols-3">
-        <div className="col-span-1  py-10">
+        <div
+          className="col-span-1  py-10"
+          onClick={() => setFieldStep(KeyOfITemplateData.personalInfo)}
+        >
           {/* Image */}
           {data.personalInfo?.image &&
           typeof data.personalInfo.image === "string" ? (
@@ -61,7 +69,10 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
         </div>
 
         {/* Name + Title */}
-        <div className="col-span-2 flex flex-col justify-center py-10 px-8">
+        <div
+          className="col-span-2 flex flex-col justify-center py-10 px-8"
+          onClick={() => setFieldStep(KeyOfITemplateData.personalInfo)}
+        >
           <h1 className="text-4xl font-bold text-zinc-700 tracking-widest">
             {data.personalInfo?.fullName || "Your Name"}
           </h1>
@@ -73,7 +84,10 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
         {/* Left Sidebar */}
         <aside className="col-span-1 border-r border-zinc-400 p-6 pt-0">
           {/* Contact */}
-          <section className="mb-8">
+          <section
+            className="mb-8"
+            onClick={() => setFieldStep(KeyOfITemplateData.personalInfo)}
+          >
             <h2 className="text-sm font-semibold tracking-widest text-zinc-600 mb-3">
               CONTACT
             </h2>
@@ -101,7 +115,10 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
 
           {/* Education */}
           {data.educations && data.educations.length > 0 && (
-            <section className="mb-8">
+            <section
+              className="mb-8"
+              onClick={() => setFieldStep(KeyOfITemplateData.education)}
+            >
               <h2 className="text-sm font-semibold tracking-widest text-zinc-600 mb-3">
                 EDUCATION
               </h2>
@@ -121,7 +138,7 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
 
           {/* Skills */}
           {data.skills && data.skills.length > 0 && (
-            <section>
+            <section onClick={() => setFieldStep(KeyOfITemplateData.skills)}>
               <h2 className="text-sm font-semibold tracking-widest text-zinc-600 mb-3">
                 SKILLS
               </h2>
@@ -138,7 +155,12 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
         <main className="col-span-2 p-8 pt-0">
           {/* Summary */}
           {data.professional_summary && (
-            <section className="mb-8">
+            <section
+              className="mb-8"
+              onClick={() =>
+                setFieldStep(KeyOfITemplateData.professional_summary)
+              }
+            >
               <h2
                 className="text-sm font-semibold tracking-widest mb-3"
                 style={{ color: colorRGB }}
@@ -155,7 +177,9 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
 
           {/* Experience */}
           {data.experiences && data.experiences.length > 0 && (
-            <section>
+            <section
+              onClick={() => setFieldStep(KeyOfITemplateData.experience)}
+            >
               <h2
                 className="text-sm font-semibold tracking-widest mb-4"
                 style={{ color: colorRGB }}
@@ -192,7 +216,7 @@ const MinimalImageTemplate = ({ data, accentColor }: ITempleteProps) => {
 
           {/* Projects */}
           {data.projects && data.projects.length > 0 && (
-            <section>
+            <section onClick={() => setFieldStep(KeyOfITemplateData.project)}>
               <h2
                 className="text-sm uppercase tracking-widest font-semibold"
                 style={{ color: colorRGB }}

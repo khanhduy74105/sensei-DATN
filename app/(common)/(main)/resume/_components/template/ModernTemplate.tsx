@@ -1,18 +1,19 @@
 import {
   ACCENT_COLOR_OPTIONS,
   ITempleteProps,
+  KeyOfITemplateData,
 } from "@/app/(common)/(main)/resume/types";
 import { formatDate } from "@/lib/utils";
 import { Mail, Phone, MapPin, Linkedin, Globe } from "lucide-react";
 
-const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
+const ModernTemplate = ({ data, accentColor, setFieldStep }: ITempleteProps) => {
   const colorRGB = ACCENT_COLOR_OPTIONS.find(
     (color) => color.name === accentColor
   )?.rgb;
   return (
     <div className="max-w-4xl mx-auto bg-white text-gray-800">
       {/* Header */}
-      <header className="p-8 text-white" style={{ backgroundColor: colorRGB }}>
+      <header className="p-8 text-white" style={{ backgroundColor: colorRGB }} onClick={() => setFieldStep(KeyOfITemplateData.personalInfo)}>
         <h1 className="text-4xl font-light mb-3">
           {data.personalInfo?.fullName || "Your Name"}
         </h1>
@@ -70,7 +71,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
       <div className="p-8">
         {/* Professional Summary */}
         {data.professional_summary && (
-          <section className="mb-8">
+          <section className="mb-8" onClick={() => setFieldStep(KeyOfITemplateData.professional_summary)}>
             <h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
               Professional Summary
             </h2>
@@ -84,7 +85,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
 
         {/* Experience */}
         {data.experiences && data.experiences.length > 0 && (
-          <section className="mb-8">
+          <section className="mb-8" onClick={() => setFieldStep(KeyOfITemplateData.experience)}>
             <h2 className="text-2xl font-light mb-6 pb-2 border-b border-gray-200">
               Experience
             </h2>
@@ -122,7 +123,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
 
         {/* Projects */}
         {data.projects && data.projects.length > 0 && (
-          <section className="mb-8">
+          <section className="mb-8" onClick={() => setFieldStep(KeyOfITemplateData.project)}>
             <h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
               Projects
             </h2>
@@ -155,7 +156,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
         <div className="grid sm:grid-cols-2 gap-8">
           {/* Education */}
           {data.educations && data.educations.length > 0 && (
-            <section>
+            <section onClick={() => setFieldStep(KeyOfITemplateData.education)}>
               <h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
                 Education
               </h2>
@@ -179,7 +180,7 @@ const ModernTemplate = ({ data, accentColor }: ITempleteProps) => {
 
           {/* Skills */}
           {data.skills && data.skills.length > 0 && (
-            <section>
+            <section onClick={() => setFieldStep(KeyOfITemplateData.skills)}>
               <h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
                 Skills
               </h2>
