@@ -5,6 +5,7 @@ import { IAssessment, ILiveMockInterview, ILiveQuizQuestion } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
+import { createPrompt, PERSONA_INTERVIEWER } from "@/lib/prompt.manage";
 import { checkUserCredits } from "./user";
 
 interface QuizQuestion {
@@ -23,27 +24,15 @@ export async function generateQuiz(entry?: { role: string; skills: string[], yoe
 
   const user = checkResult.user!;
 
-  let prompt = entry ?
-    `Generate 10 technical interview questions for a ${entry.role} with ${entry.yoes} years of experience ${entry.skills?.length ? ` with expertise in ${entry.skills.join(", ")}` : ""}`
-    : `Generate 10 technical interview questions for a ${user.industry
-    } professional${user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""}.`
-
-  prompt += `
-    
-    Each question should be multiple choice with 4 options.
-    
-    Return the response in this JSON format only, no additional text:
-    {
-      "questions": [
-        {
-          "question": "string",
-          "options": ["string", "string", "string", "string"],
-          "correctAnswer": "string",
-          "explanation": "string"
-        }
-      ]
-    }
-  `;
+  const prompt = createPrompt({
+    context: entry
+      ? `Generate 10 technical multiple-choice interview questions for a ${entry.role} with ${entry.yoes} years of experience${entry.skills?.length ? ` with expertise in ${entry.skills.join(", ")}` : ""}.`
+      : `Generate 10 technical multiple-choice interview questions for a ${user.industry} professional${user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""}.`,
+    role: PERSONA_INTERVIEWER,
+    instruction: `Produce 10 multiple-choice technical interview questions. Each question must have 4 options, one correct answer, and a clear explanation for the correct answer.`,
+    specification: `Return ONLY valid JSON with the shape: { "questions": [{ "question": "string", "options": ["string", "string", "string", "string"], "correctAnswer": "string", "explanation": "string" }] }. No extra text or markdown.`,
+    performance: `Ensure JSON parses cleanly. Questions should be clear, practical, and relevant to the role/experience.`,
+  });
 
   try {
     const result = await getGeneratedAIContent(prompt);
@@ -90,16 +79,13 @@ export async function saveQuizResult(questions: QuizQuestion[], answers: string[
       )
       .join("\n\n");
 
-    const improvementPrompt = `
-      The user got the following ${user.industry} technical interview questions wrong:
-
-      ${wrongQuestionsText}
-
-      Based on these mistakes, provide a concise, specific improvement tip.
-      Focus on the knowledge gaps revealed by these wrong answers.
-      Keep the response under 2 sentences and make it encouraging.
-      Don't explicitly mention the mistakes, instead focus on what to learn/practice.
-    `;
+    const improvementPrompt = createPrompt({
+      context: `The user answered the following ${user.industry} technical interview questions incorrectly:\n\n${wrongQuestionsText}`,
+      role: PERSONA_INTERVIEWER,
+      instruction: `Provide a concise, specific improvement tip focused on the knowledge gaps revealed by these wrong answers. Do not explicitly call out user mistakes; instead, suggest what to learn or practice.`,
+      specification: `Keep the response under 2 sentences and encouraging in tone.`,
+      performance: `Actionable, concise tip that the user can act on immediately.`,
+    });
 
     try {
       const tipResult = await getGeneratedAIContent(improvementPrompt);
@@ -165,24 +151,13 @@ export async function generateInterviewQuestions({ role, description, yoes }: { 
   if (!checkResult.success) return checkResult;
 
   const user = checkResult.user!;
-  const prompt = `
-    Act as a technical interviewer. 
-    Generate 5 professional interview questions for the position: ${role}, 
-    with the job description: ${description}, 
-    and the candidate's years of experience: ${yoes}.
-
-    Requirements:
-    - Questions must be clear and concise.
-    - Focus on practical skills and real-world project experience.
-    
-    Return the response in this JSON format only, no additional text:
-    {
-      "questions": [
-        "question": "string",
-        "correctAnswer": "string"
-      ]
-    }
-  `;
+  const prompt = createPrompt({
+    context: `Generate 5 interview questions for the role: ${role}. Job description: ${description}. Candidate years of experience: ${yoes}.`,
+    role: PERSONA_INTERVIEWER,
+    instruction: `Create 5 clear, professional interview questions that focus on practical skills and real-world project experience. For each question, provide a correct answer.`,
+    specification: `Return ONLY valid JSON in the shape: { "questions": [{ "question": "string", "correctAnswer": "string" }] }. No extra text or markdown.`,
+    performance: `Questions must be relevant to the job description and experience level; JSON must parse cleanly.`,
+  });
   try {
     const result = await getGeneratedAIContent(prompt);
     const response = result.response;

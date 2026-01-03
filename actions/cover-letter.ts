@@ -6,6 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import getGeneratedAIContent from "@/lib/openRouter";
 import { checkUserCredits } from "./user";
 import { IApplicationEmail, IProspectingEmail, IReferralRequest, IThankYouEmail } from "@/app/(common)/(main)/ai-cover-letter/_components/type";
+import { createPrompt, PERSONA_COPYWRITER } from "@/lib/prompt.manage";
 
 export async function generateApplicationEmail(data: Partial<IApplicationEmail>) {
     const { userId } = await auth();
@@ -16,25 +17,13 @@ export async function generateApplicationEmail(data: Partial<IApplicationEmail>)
 
     const user = checkResult.user!;
 
-    const prompt = `
-    **Role:** Expert Career Coach & Professional Copywriter
-    **Goal:** Write a tailored Cover Letter for a ${data.jobTitle} position at ${data.companyName}.
-    **Recipient:** ${data.hiringManager || "Hiring Manager"}
-
-    **Job Description:**
-    ${data.jobDescription}
-
-    **Instructions:**
-    1. Analyze the JD to identify top 3 critical skills.
-    2. Map candidate's experience to these skills with specific examples.
-    3. Express genuine enthusiasm for the company/role.
-    4. Tone: Professional, Confident, and Persuasive.
-    5. Format: Standard Business Letter in Markdown.
-    6. Keep it concise (max 200 words).
-    7. Include specific achievements that demonstrate value.
-
-    Format the letter in markdown with proper business letter structure.
-    `;
+    const prompt = createPrompt({
+        context: `Write a tailored cover letter for the position ${data.jobTitle} at ${data.companyName}. Recipient: ${data.hiringManager || "Hiring Manager"}. Job Description: ${data.jobDescription}`,
+        role: PERSONA_COPYWRITER,
+        instruction: `Analyze the job description to identify the top 3 critical skills. Map the candidate's experience to these skills using specific examples. Express genuine enthusiasm for the company and role. Produce a concise, persuasive cover letter.`,
+        specification: `Format: Standard business letter in Markdown. Length: max 200 words. Tone: Professional, Confident, Persuasive. Must include 2-3 specific achievements demonstrating value.`,
+        performance: `Success: A cover letter ready to send that clearly maps experience to JD and includes measurable achievements. Avoid generic filler; do not exceed 200 words.`,
+    });
 
     try {
         const result = await getGeneratedAIContent(prompt);
@@ -73,23 +62,13 @@ export async function generateProspectingEmail(data: Partial<IProspectingEmail>)
 
     const user = checkResult.user!;
 
-    const prompt = `
-        **Role:** Professional Networker
-        **Goal:** Write a concise Cold Email to ${data.recipientName || "the hiring team"} at ${data.companyName}.
-        **Context:** ${data.contextReason}
-
-        ${data.targetRole ? `\n**Target Role:** ${data.targetRole}` : ""}
-
-        **Instructions:**
-        1. Hook the reader immediately in the first sentence (refer to Context).
-        2. Briefly introduce yourself and your value proposition${data.targetRole ? ` related to ${data.targetRole}` : ""}.
-        3. Keep it extremely short (under 150 words).
-        4. Include a soft Call-to-Action (e.g., "Open to a 10-min coffee chat?").
-        5. Tone: Polite, Respectful, but Direct. Avoid generic fluff.
-        6. Format in markdown.
-
-        Write the email now:
-        `;
+    const prompt = createPrompt({
+        context: `Write a concise cold/prospecting email to ${data.recipientName || "the hiring team"} at ${data.companyName}. Context: ${data.contextReason}${data.targetRole ? ` Target Role: ${data.targetRole}` : ""}`,
+        role: PERSONA_COPYWRITER,
+        instruction: `Hook the reader immediately referencing the context. Briefly introduce the candidate and value proposition${data.targetRole ? ` related to ${data.targetRole}` : ""}. Include a soft call-to-action.`,
+        specification: `Format: Markdown. Length: under 150 words. Tone: Polite, Respectful, Direct. Include one concise CTA.`,
+        performance: `Success: A short cold email that prompts a reply or meeting; avoid generic phrasing and filler.`,
+    });
 
     try {
         const result = await getGeneratedAIContent(prompt);
@@ -128,22 +107,13 @@ export async function generateReferralRequest(data: Partial<IReferralRequest>) {
 
     const user = checkResult.user!;
 
-    const prompt = `
-    **Role:** Professional Communicator
-    **Goal:** Write a Referral Request email to ${data.recipientName} for a role at ${data.companyName}.
-    **Relationship Context:** ${data.relationship}
-    ${data.targetJobLink ? `\n**Target Job:** ${data.targetJobLink}` : ""}
-
-    **Instructions:**
-    1. Start with a warm, personalized greeting based on the ${data.relationship} relationship.
-    2. Clearly state your intention to apply for ${data.companyName}.
-    3. Explain briefly why you are a good fit (so they feel confident referring you).
-    4. **Important:** Include a "blurb" (short summary of 2-3 sentences) at the end that they can easily copy-paste to forward to HR.
-    5. Tone: Grateful and Low-pressure.
-    6. Format in markdown.
-
-    Write the email now:
-    `;
+    const prompt = createPrompt({
+        context: `Write a referral request email to ${data.recipientName} for a role at ${data.companyName}. Relationship context: ${data.relationship}${data.targetJobLink ? ` Target Job: ${data.targetJobLink}` : ""}`,
+        role: PERSONA_COPYWRITER,
+        instruction: `Begin with a warm, personalized greeting. State intent to apply and briefly explain why the candidate is a strong fit. Provide a 2-3 sentence 'blurb' at the end suitable for copy-pasting to HR.`,
+        specification: `Format: Markdown. Tone: Grateful, Low-pressure. Include the copy-paste blurb as a separate paragraph.`,
+        performance: `Success: A polite referral request that makes it easy for the recipient to refer; keep it concise and personal.`,
+    });
 
     try {
         const result = await getGeneratedAIContent(prompt);
@@ -182,22 +152,13 @@ export async function generateThankYouEmail(data: Partial<IThankYouEmail>) {
 
     const user = checkResult.user!;
 
-    const prompt = `
-    **Role:** Courteous Professional
-    **Goal:** Write a Thank You Follow-up email to ${data.interviewerName} at ${data.companyName}.
-    **Position:** ${data.jobTitle}
-    ${data.discussionTopic ? `\n**Key Topic Discussed:** ${data.discussionTopic}` : ""}
-
-    **Instructions:**
-    1. Express sincere gratitude for their time.
-    ${data.discussionTopic ? `2. Reference the ${data.discussionTopic} discussion to show you were listening and engaged.` : "2. Reference something memorable from the interview."}
-    3. Reiterate your excitement for the ${data.jobTitle} role and how you can add value.
-    4. Keep it timely (within 24h context) and concise.
-    5. Tone: Warm, Professional, and Appreciative.
-    6. Format in markdown.
-
-    Write the email now:
-    `;
+    const prompt = createPrompt({
+        context: `Write a thank-you follow-up email to ${data.interviewerName} at ${data.companyName} for the ${data.jobTitle} interview.${data.discussionTopic ? ` Key topic discussed: ${data.discussionTopic}.` : ""}`,
+        role: PERSONA_COPYWRITER,
+        instruction: `Express sincere gratitude, reference a memorable point from the interview or the provided discussion topic, reiterate excitement for the role and how the candidate can add value.`,
+        specification: `Format: Markdown. Length: concise, suitable to send within 24 hours. Tone: Warm, Professional, Appreciative.`,
+        performance: `Success: A timely thank-you email that reinforces fit and interest, without repeating the entire interview.`,
+    });
 
     try {
         const result = await getGeneratedAIContent(prompt);

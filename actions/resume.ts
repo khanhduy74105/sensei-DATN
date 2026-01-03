@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import getGeneratedAIContent from "@/lib/openRouter";
+import { createPrompt, PERSONA_ATS_EXPERT } from "@/lib/prompt.manage";
 import { checkUserCredits } from "./user";
 
 export async function createResume(
@@ -336,34 +337,13 @@ export async function improveWithAI({
 
     const user = checkResult.user!;
 
-    const basePrompt = `
-        # ROLE
-        You are a Senior Career Strategist and ATS (Applicant Tracking System) Expert. Your specialty is transforming passive job descriptions into high-impact, achievement-oriented bullet points.
-
-        # TASK
-        Rewrite the provided "${type}" content to be more impactful, professional, and results-driven.
-
-        # EXECUTION RULES
-        1. **Action-Oriented**: Start sentences with strong, diverse action verbs (e.g., 'orchestrated', 'streamlined', 'surpassed'). Avoid "Responsible for".
-        2. **Achievement Focus**: Shift the focus from "what you did" to "what you achieved". Use the formula: [Action Verb] + [Task] + [Impact/Result].
-        3. **Smart Quantification**: 
-        - Use the specific metrics provided in the text.
-        - If no metrics exist, focus on the *magnitude* or *frequency* of the work to imply scale.
-        4. **Length & Structure**: 
-        - Expand or condense the content to exactly 3-4 professional sentences.
-        - Deliver as a single, separate sentences with an enter and start with "-".
-        5. **Industry Alignment**: Integrate relevant technical skills and keywords naturally (no keyword stuffing).
-        6. **Constraint**: Do NOT invent fictional data, company names, or tools not mentioned in the original text.
-
-        # OUTPUT FORMAT
-        - Strictly English only.
-        - Return ONLY the improved paragraph. 
-        - No introductions, no quotes, no explanations.
-
-        # ORIGINAL CONTENT TO IMPROVE:
-        """${current}"""
-        `;
-    const prompt = basePrompt;
+    const prompt = createPrompt({
+        context: `You are rewriting a piece of resume content (${type}) to improve impact and ATS alignment. Original content: ${current}`,
+        role: PERSONA_ATS_EXPERT,
+        instruction: `Rewrite the provided content to be more impactful, professional, and results-driven. Use action verbs and focus on achievements using the formula: [Action Verb] + [Task] + [Impact/Result]. Do NOT invent facts or tools not present in the original text.`,
+        specification: `Produce exactly 3-4 professional sentences. Each output sentence should be a single line starting with "-". Strictly English. Return ONLY the improved paragraph with no additional commentary.`,
+        performance: `Avoid filler language; prefer measurable impact. Preserve truthfulness and ensure improved readability and ATS keyword relevance.`,
+    });
 
     try {
         const result = await getGeneratedAIContent(prompt);
@@ -386,18 +366,11 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
     if (!checkResult.success) return checkResult;
 
     const user = checkResult.user!;
-    const RESUME_PARSING_PROMPT = `
-        You are an expert resume parser. Extract and structure information from the provided resume text into a JSON format.
-
-        **Instructions:**
-        1. Carefully read the entire resume text
-        2. Extract all relevant information
-        3. Structure the data according to the schema below
-        4. Use null for missing fields
-        5. Ensure dates are in ISO 8601 format (YYYY-MM-DD)
-        6. For ongoing positions, set isCurrent: true and endDate: null
-
-        **Output Schema:**
+    const RESUME_PARSING_PROMPT = createPrompt({
+        context: `You are an expert resume parser. Extract and structure information from the provided resume text into a JSON object using the exact schema.`,
+        role: PERSONA_ATS_EXPERT,
+        instruction: `Extract personalInfo, professional_summary, experiences, educations, projects, and skills from the resume text. Use null when a field is missing. Dates MUST be ISO 8601 (YYYY-MM-DD). For current roles, set isCurrent: true and endDate: null. Do not invent facts.`,
+        specification: `Return ONLY a single JSON object that exactly matches this template (no surrounding text, code fences, or markdown):
         {
         "personalInfo": {
             "fullName": string,
@@ -437,63 +410,14 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
         ],
         "skills": string[]
         }
+        Use null where appropriate.`,
+        performance: `MUST return valid JSON parsable by JSON.parse(). Do not include any extra keys, comments, or text.`,
+    });
 
-        **Parsing Guidelines:**
-
-        **Personal Information:**
-        - Extract name, email, phone from header/contact section
-        - Look for LinkedIn, GitHub, portfolio URLs
-        - Extract physical address if present
-
-        **Professional Summary:**
-        - Usually at the top after contact info
-        - May be labeled as "Summary", "Profile", "Objective", or "About Me"
-        - Combine multiple paragraphs into one string
-
-        **Experiences:**
-        - List all work experiences in chronological order (most recent first)
-        - Extract job title, company name, location, dates
-        - If the position says "Present", "Current", or similar, set isCurrent: true
-        - Combine bullet points into description field
-        - Extract key achievements separately if clear
-
-        **Education:**
-        - Include degree name (Bachelor's, Master's, etc.)
-        - Extract institution name, major/field of study
-        - Parse graduation date or expected graduation
-        - Include GPA if mentioned
-
-        **Projects:**
-        - Look for "Projects", "Personal Projects", or "Portfolio" section
-        - Extract project name and description
-        - Identify technologies/tools used
-        - Find GitHub or demo links if present
-
-        **Skills:**
-        - Extract from "Skills", "Technical Skills", "Core Competencies" section
-        - Return as array of individual skills
-        - Include programming languages, frameworks, tools, soft skills
-        - Should be keywords only
-        - Separate combined skills (e.g., "React/Next.js" → ["React", "Next.js"])
-
-        **Date Parsing Rules:**
-        - Convert formats like "Jan 2023", "January 2023" to "2023-01-01"
-        - "2023 - Present" → startDate: "2023-01-01", endDate: null, isCurrent: true
-        - "2020 - 2023" → startDate: "2020-01-01", endDate: "2023-12-31"
-        - If only year is given, use January 1st or December 31st appropriately
-
-        **Important:**
-        - Return ONLY valid JSON, no additional text or explanation
-        - Use null for missing optional fields
-        - Ensure all strings are properly escaped
-        - Keep descriptions concise but informative
-        - Preserve original wording when possible
-
-        **Resume Text to Parse:**
-        ${resumeExtractedText}**
-        `;
+    // append the resume extract to the generated prompt
+    const RESUME_PARSING_PROMPT_FULL = `${RESUME_PARSING_PROMPT}\n\nResume Text to Parse:\n${resumeExtractedText}`;
     try {
-        const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT, true);
+        const result = await getGeneratedAIContent(RESUME_PARSING_PROMPT_FULL, true);
         const response = result.response;
         const text = response.text();
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
@@ -526,43 +450,28 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
     if (!checkResult.success) return checkResult;
 
     try {
-        const prompt = `
-        # ROLE
-        You are an expert ATS (Applicant Tracking System) Specialist. Your goal is to optimize the candidate's Resume to pass ATS filters by aligning it perfectly with the Job Description (JD).
+        const prompt = createPrompt({
+            context: `You are an expert ATS Specialist. Optimize the candidate's resume JSON to align with this job description and produce a strict analysis object.`,
+            role: PERSONA_ATS_EXPERT,
+            instruction: `Using JOB_DESCRIPTION and CANDIDATE_RESUME_JSON, produce a match analysis and suggestions. Return ONLY a single JSON object matching the template exactly. No extra text, code fences, or explanation.`,
+            specification: `
+            # STRICT RULES FOR SKILLS (CRITICAL)
+            1. ONLY MATCHING KEYWORDS: In 'fieldSuggestions.skills.suggested', you MUST include all essential skills and technologies mentioned in the JD, even if they are missing from the current resume.
+            2. ATOMIZED FORMAT: Each skill must be a standalone keyword/tag. 
+            - Split "React/Next.js" into "React", "Next.js".
+            - Split "HTML/CSS" into "HTML", "CSS".
+            3. NO EXPLANATIONS: DO NOT include any text in parentheses or extra descriptors.
+            - WRONG: "Automated Testing (Eagerness to learn)", "English (Fluent)", "React (v18)".
+            - RIGHT: "Automated Testing", "English", "React".
+            4. CLEANING: Remove all adjectives like "Expert", "Proficient", "Junior", or "Knowledge of".
 
-        # INPUT DATA
-        ## JOB DESCRIPTION
-        """
-        ${jd}
-        """
-
-        ## CANDIDATE RESUME (JSON)
-        ${JSON.stringify({
-            professional_summary: resume.professional_summary,
-            experiences: resume.experiences,
-            educations: resume.educations,
-            projects: resume.projects,
-            skills: resume.skills,
-        })}
-
-        # STRICT RULES FOR SKILLS (CRITICAL)
-        1. ONLY MATCHING KEYWORDS: In 'fieldSuggestions.skills.suggested', you MUST include all essential skills and technologies mentioned in the JD, even if they are missing from the current resume.
-        2. ATOMIZED FORMAT: Each skill must be a standalone keyword/tag. 
-        - Split "React/Next.js" into "React", "Next.js".
-        - Split "HTML/CSS" into "HTML", "CSS".
-        3. NO EXPLANATIONS: DO NOT include any text in parentheses or extra descriptors.
-        - WRONG: "Automated Testing (Eagerness to learn)", "English (Fluent)", "React (v18)".
-        - RIGHT: "Automated Testing", "English", "React".
-        4. CLEANING: Remove all adjectives like "Expert", "Proficient", "Junior", or "Knowledge of".
-
-        # TASKS
-        1. Overall Match Analysis: Score 0-100 based on JD requirements vs Resume.
-        2. Identify missing skills: List skills required by JD that are not in the resume.
-        3. Rewrite Sections: Optimize 'professional_summary', 'experiences', and 'projects' by weaving in JD keywords naturally.
-        4. Skills Optimization: Generate a cleaned, atomized list of top 20 skills that are most relevant to the JD.
-
-        # OUTPUT FORMAT (STRICT JSON ONLY)
-        {
+            # TASKS
+            1. Overall Match Analysis: Score 0-100 based on JD requirements vs Resume.
+            2. Identify missing skills: List skills required by JD that are not in the resume.
+            3. Rewrite Sections: Optimize 'professional_summary', 'experiences', and 'projects' by weaving in JD keywords naturally.
+            4. Skills Optimization: Generate a cleaned, atomized list of top 20 skills that are most relevant to the JD.
+            Return EXACTLY this JSON structure (keys and types must match):
+            {
             matchAnalysis: {
                 overallScore: number; // 0–100
                 verdict: "strong_match" | "moderate_match" | "weak_match";
@@ -579,6 +488,7 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
 
             generalSuggestions: string[];
 
+            // If the original content is good enough and needs no changes, then skip that item.
             fieldSuggestions: {
                 professional_summary?: {
                     current: string;
@@ -633,9 +543,20 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
                     reason: string;
                 };
             };
-        `
+            }
+            Skills must be atomized (no slashes, parentheses, or modifiers).`,
+            performance: `MUST return ONLY the JSON object above and nothing else. The response must parse with JSON.parse().`,
+        });
 
-        const result = await getGeneratedAIContent(prompt);
+        const promptWithInputs = `${prompt}\n\nJOB_DESCRIPTION:\n${jd}\n\nCANDIDATE_RESUME_JSON:\n${JSON.stringify({
+            professional_summary: resume.professional_summary,
+            experiences: resume.experiences,
+            educations: resume.educations,
+            projects: resume.projects,
+            skills: resume.skills,
+        })}`;
+
+        const result = await getGeneratedAIContent(promptWithInputs);
         const response = result.response;
         const text = response.text();
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();

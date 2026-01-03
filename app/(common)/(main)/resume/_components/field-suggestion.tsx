@@ -7,10 +7,28 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ReactElement } from "react";
 
 export type SuggestionStatus = "pending" | "applied" | "ignored";
+
+const Badge = ({
+  label,
+  variant = "default",
+}: {
+  label: string;
+  variant?: "default" | "success" | "warning" | "danger";
+}) => {
+  const map = {
+    default: "bg-gray-100 text-gray-800",
+    success: "bg-green-100 text-green-700",
+    warning: "bg-yellow-100 text-yellow-700",
+    danger: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <span className={`px-2 py-1 rounded text-xs ${map[variant]}`}>{label}</span>
+  );
+};
 
 type FieldSuggestionCardProps = {
   title: string;
@@ -48,9 +66,10 @@ export default function FieldSuggestionCard({
       {/* Status badge */}
       {status !== "pending" && (
         <div className="absolute top-2 right-2">
-          <Badge variant={status === "applied" ? "default" : "secondary"}>
-            {status === "applied" ? "Applied" : "Ignored"}
-          </Badge>
+          <Badge
+            label={status === "applied" ? "Applied" : "Ignored"}
+            variant={status === "applied" ? "success" : "warning"}
+          ></Badge>
         </div>
       )}
 
@@ -87,7 +106,7 @@ export default function FieldSuggestionCard({
           </>
         )}
 
-        {status === "applied" && onUndo && (
+        {(status === "applied" || status === "ignored") && onUndo && (
           <Button size="sm" variant="ghost" onClick={onUndo}>
             Undo
           </Button>

@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import getGeneratedAIContent from "@/lib/openRouter";
+import { createPrompt, PERSONA_MARKET_ANALYST } from "@/lib/prompt.manage";
 type IndustryInsightCore = Pick<Prisma.IndustryInsightCreateInput,
   | "salaryRanges"
   | "growthRate"
@@ -19,9 +20,11 @@ type IndustryInsightCore = Pick<Prisma.IndustryInsightCreateInput,
 export const genarateAIIsignts = async (
   industry: string
 ): Promise<IndustryInsightCore> => {
-  const prompt = `
-    Analyze the current state of the ${industry} industry and provide insights in ONLY the following JSON format without any additional notes or explanations:
-    {
+  const prompt = createPrompt({
+    context: `Analyze the current state of the ${industry} industry and return structured market insights.`,
+    role: PERSONA_MARKET_ANALYST,
+    instruction: `Provide market-level insights including salary ranges, growth rate, demand level, top skills, market outlook, key trends, and recommended skills.`,
+    specification: `Return ONLY valid JSON in this shape: {
       "salaryRanges": [
         { "role": "string", "min": number, "max": number, "median": number, "location": "string" }
       ],
@@ -31,13 +34,9 @@ export const genarateAIIsignts = async (
       "marketOutlook": "Positive" | "Neutral" | "Negative",
       "keyTrends": ["trend1", "trend2"],
       "recommendedSkills": ["skill1", "skill2"]
-    }
-    
-    IMPORTANT: Return ONLY the JSON. No additional text, notes, or markdown formatting.
-    Include at least 5 common roles for salary ranges.
-    Growth rate should be a percentage.
-    Include at least 5 skills and trends.
-  `;
+    }. Include at least 5 roles and at least 5 skills/trends. Growth rate must be a percentage number.`,
+    performance: `Return only the JSON object with no extra text or markdown. Ensure JSON parses correctly.`,
+  });
 
   const result = await getGeneratedAIContent(prompt, true);
   const response = result.response;
@@ -73,7 +72,7 @@ export async function getIndustryInsight() {
   };
 
   return user.industryInsight;
-} 
+}
 
 export async function getHeroStats() {
   const [
