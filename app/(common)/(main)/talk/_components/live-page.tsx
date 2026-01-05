@@ -23,6 +23,7 @@ import {
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { TextWithLineClamp } from "./text-clamp";
 
 interface LiveInterviewPageProps {
   mockInterview: ILiveMockInterview;
@@ -240,9 +241,9 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
         <h2 className="text-2xl font-bold">
           Live Mock Interview: {mockInterview.role}
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Question about: {mockInterview.description}
-        </p>
+        <TextWithLineClamp 
+          text={`Description: ${mockInterview.description}`}
+        />
       </div>
       <div className="flex-1 flex gap-6">
         <aside className="w-full md:w-1/2 bg-card border border-border rounded-md p-6 flex flex-col shadow-sm">
@@ -309,10 +310,10 @@ const LiveInterviewPage = ({ mockInterview }: LiveInterviewPageProps) => {
             </div>
           </div>
 
-          {userAnswers[selectedIndex] && (
+          {(
             <div className="mb-5 p-4 rounded-md border border-border bg-muted/50">
               <div className="text-sm text-muted-foreground font-medium mb-2">
-                {`User's answer`}
+                {`User's answer for Q${selectedIndex + 1}:`}
               </div>
               <textarea
                 value={userAnswers[selectedIndex]}

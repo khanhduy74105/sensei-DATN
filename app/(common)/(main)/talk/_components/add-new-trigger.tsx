@@ -106,7 +106,7 @@ export const AddNewTrigger = () => {
         </Button>
       </DialogTrigger>
       <DialogOverlay className="fixed inset-0 bg-gray-200/60" />
-      <DialogContent className="sm:max-w-1/2 p-8">
+      <DialogContent className="sm:max-w-1/2 p-8 max-h-full overflow-y-auto">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>Tell us more about your job interviwing</DialogTitle>

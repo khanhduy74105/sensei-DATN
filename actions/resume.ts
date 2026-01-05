@@ -408,7 +408,7 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
             "type": string
             }
         ],
-        "skills": string[]
+        "skills": string[] // array of skill keywords
         }
         Use null where appropriate.`,
         performance: `MUST return valid JSON parsable by JSON.parse(). Do not include any extra keys, comments, or text.`,
@@ -422,14 +422,6 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
         const text = response.text();
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
         const parsedResume = JSON.parse(cleanedText)
-        const { userId } = await auth();
-        if (!userId) throw new Error('User not authenticated');
-
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId }
-        });
-        if (!user) throw new Error('User not found');
-
         parsedResume.title = title;
 
         const createdResume = await createResume(parsedResume)

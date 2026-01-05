@@ -18,7 +18,7 @@ export default async function MockInterViewPage() {
         </Link>
 
         <div className="">
-          <h1 className="text-6xl font-bold gradient-title">Mock Interview</h1>
+          <h1 className="text-6xl font-bold gradient-title">Interview Quiz</h1>
           <p className='text-muted-foreground'>
             Test your knowledge with industry-specific questions or prepare for your next interview
           </p>

@@ -50,7 +50,8 @@ const UploadResumeTrigger = () => {
       const { default: pdfToText } = await import("react-pdftotext");
       const text = await pdfToText(selectedFile);
       setExtractedText(text.trim());
-      setResumeTitle(selectedFile.name);
+      const fileName = selectedFile.name.replace(/\.[^/.]+$/, "");
+      setResumeTitle(fileName);
     } catch (error) {
       console.error("Failed when extract PDF:", error);
       alert("Failed when extract PDF");
