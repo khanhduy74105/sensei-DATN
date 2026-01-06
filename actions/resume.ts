@@ -369,7 +369,7 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
     const RESUME_PARSING_PROMPT = createPrompt({
         context: `You are an expert resume parser. Extract and structure information from the provided resume text into a JSON object using the exact schema.`,
         role: PERSONA_ATS_EXPERT,
-        instruction: `Extract personalInfo, professional_summary, experiences, educations, projects, and skills from the resume text. Use null when a field is missing. Dates MUST be ISO 8601 (YYYY-MM-DD). For current roles, set isCurrent: true and endDate: null. Do not invent facts.`,
+        instruction: `Extract personalInfo, professional_summary, experiences, educations, projects, and skills (max 10 most important skills, and in keywords format. E.g., "JavaScript", "React", "Node.js") from the resume text. Use null when a field is missing. Dates MUST be ISO 8601 (YYYY-MM-DD). For current roles, set isCurrent: true and endDate: null. Do not invent facts.`,
         specification: `Return ONLY a single JSON object that exactly matches this template (no surrounding text, code fences, or markdown):
         {
         "personalInfo": {
@@ -408,7 +408,7 @@ export async function convertExtractedTextToResumeData(title: string, resumeExtr
             "type": string
             }
         ],
-        "skills": string[] // array of skill keywords
+        "skills": string[]
         }
         Use null where appropriate.`,
         performance: `MUST return valid JSON parsable by JSON.parse(). Do not include any extra keys, comments, or text.`,
@@ -448,20 +448,58 @@ export async function analyzeMatchingResume(jd: string, resume: ITemplateData) {
             instruction: `Using JOB_DESCRIPTION and CANDIDATE_RESUME_JSON, produce a match analysis and suggestions. Return ONLY a single JSON object matching the template exactly. No extra text, code fences, or explanation.`,
             specification: `
             # STRICT RULES FOR SKILLS (CRITICAL)
-            1. ONLY MATCHING KEYWORDS: In 'fieldSuggestions.skills.suggested', you MUST include all essential skills and technologies mentioned in the JD, even if they are missing from the current resume.
-            2. ATOMIZED FORMAT: Each skill must be a standalone keyword/tag. 
-            - Split "React/Next.js" into "React", "Next.js".
-            - Split "HTML/CSS" into "HTML", "CSS".
-            3. NO EXPLANATIONS: DO NOT include any text in parentheses or extra descriptors.
-            - WRONG: "Automated Testing (Eagerness to learn)", "English (Fluent)", "React (v18)".
-            - RIGHT: "Automated Testing", "English", "React".
-            4. CLEANING: Remove all adjectives like "Expert", "Proficient", "Junior", or "Knowledge of".
 
-            # TASKS
-            1. Overall Match Analysis: Score 0-100 based on JD requirements vs Resume.
-            2. Identify missing skills: List skills required by JD that are not in the resume.
-            3. Rewrite Sections: Optimize 'professional_summary', 'experiences', and 'projects' by weaving in JD keywords naturally.
-            4. Skills Optimization: Generate a cleaned, atomized list of top 20 skills that are most relevant to the JD.
+            1. ONLY MATCHING KEYWORDS:
+            In 'fieldSuggestions.skills.suggested', you MUST include all essential skills explicitly mentioned or clearly implied in the JD, even if they are missing from the current resume.
+
+            2. ATOMIC KEYWORD ONLY:
+            Each skill MUST be a single atomic keyword or a well-known technical term.
+            - Skills MUST be tools, technologies, languages, libraries, frameworks, or concrete technical concepts.
+            - NO abstract, conceptual, or soft skills are allowed.
+
+            FORBIDDEN:
+            - Multi-word concepts (e.g. "User Interface Design", "Browser-based Debugging", "Problem Solving")
+            - Generic categories (e.g. "Performance Testing", "Frontend Development")
+            - Soft skills or thinking skills
+
+            ALLOWED:
+            - "React", "Next.js", "HTML", "CSS", "JavaScript"
+            - "Chrome DevTools", "Lighthouse", "Web Vitals"
+            - "Algorithms", "Data Structures"
+
+            3. SPLITTING RULE:
+            Always split combined skills into individual atomic keywords.
+            - "React/Next.js" → "React", "Next.js"
+            - "HTML/CSS" → "HTML", "CSS"
+            - "SASS/LESS" → "SASS", "LESS"
+
+            4. NO EXPLANATIONS OR MODIFIERS:
+            Do NOT include:
+            - Parentheses
+            - Versions
+            - Descriptors
+            - Proficiency levels
+
+            WRONG:
+            - "React (v18)"
+            - "English (Fluent)"
+            - "Automated Testing (Eagerness to learn)"
+
+            RIGHT:
+            - "React"
+            - "English"
+            - "Automated Testing"
+
+            5. NORMALIZATION:
+            - Deduplicate similar skills (e.g. "React.js" → "React")
+            - Use industry-standard naming
+            - Correct spelling and casing
+
+            6. HARD FILTER:
+            If a skill cannot be represented as a concrete technical keyword, DO NOT include it.
+
+            7. LIMIT:
+            - 'fieldSuggestions.skills.suggested': 10-15 skills base on the JD's experience requirements.
             Return EXACTLY this JSON structure (keys and types must match):
             {
             matchAnalysis: {
