@@ -341,7 +341,7 @@ export async function improveWithAI({
         context: `You are rewriting a piece of resume content (${type}) to improve impact and ATS alignment. Original content: ${current}`,
         role: PERSONA_ATS_EXPERT,
         instruction: `Rewrite the provided content to be more impactful, professional, and results-driven. Use action verbs and focus on achievements using the formula: [Action Verb] + [Task] + [Impact/Result]. Do NOT invent facts or tools not present in the original text.`,
-        specification: `Produce exactly 3-4 professional sentences. Each output sentence should be a single line starting with "-". Strictly English. Return ONLY the improved paragraph with no additional commentary.`,
+        specification: `Produce exactly 3-4 professional sentences.If field need enhance is professional summary then return in 1 paragraph else Each output sentence should be a single line starting with "-". Strictly English. Return ONLY the improved paragraph with no additional commentary.`,
         performance: `Avoid filler language; prefer measurable impact. Preserve truthfulness and ensure improved readability and ATS keyword relevance.`,
     });
 
