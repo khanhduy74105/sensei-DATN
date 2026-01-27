@@ -28,7 +28,7 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({
   children,
-  title = "Are you sure?",
+  title = "Are you sures?",
   description = "This action cannot be undone.",
   confirmText = "Confirm",
   cancelText = "Cancel",
